@@ -1093,7 +1093,8 @@ function _draw()
   end
 
   -- draw bg color (pad for screenshake)
-  rectfill(-5,-5,132,132,flash_bg and frames/5 or new_bg and 2 or 0)
+  cls()
+  rectfill(0,0,127,127,flash_bg and frames/5 or new_bg and 2 or 0)
 
   -- bg clouds effect
   if not is_title() then
