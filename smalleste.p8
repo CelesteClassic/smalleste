@@ -159,7 +159,7 @@ player={
       
       -- facing direction
       if this.spd.x~=0 then
-        this.flip.x=(this.spd.x<0)
+        this.flip.x=this.spd.x<0
       end
 
       -- y movement
@@ -590,10 +590,10 @@ lifeup={
 fake_wall={
   if_not_fruit=true,
   update=function(this)
-    this.hitbox.w,this.hitbox.h=18,18
-    local hit=this.check(player,-1,-1)
+    this.hitbox=rectangle(-1,-1,18,18)
+    local hit=this.player_here()
     if hit and hit.dash_effect_time>0 then
-      hit.spd=vector(-sign(hit.spd.x)*1.5,-1.5)
+      hit.spd=vector(sign(hit.spd.x)*-1.5,-1.5)
       hit.dash_time=-1
       for ox=0,8,8 do
         for oy=0,8,8 do
@@ -602,7 +602,7 @@ fake_wall={
       end
       init_fruit(this,4,4)
     end
-    this.hitbox.w,this.hitbox.h=16,16
+    this.hitbox=rectangle(0,0,16,16)
   end,
   draw=function(this)
     spr(64,this.x,this.y,2,2)
@@ -1033,11 +1033,9 @@ function _update()
   end
   if shake>0 then
     shake-=1
-    if screenshake then
-      camera()
-      if shake~=0 then
-        camera(-2+rnd(5),-2+rnd(5))
-      end
+    camera()
+    if screenshake and shake~=0 then
+      camera(-2+rnd(5),-2+rnd(5))
     end
   end
   
