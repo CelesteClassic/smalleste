@@ -1097,7 +1097,7 @@ function _draw()
   if not is_title() then
     foreach(clouds, function(c)
       c.x+=c.spd
-      crectfill(c.x,c.y,c.x+c.w,c.y+12-c.w/64*12,new_bg and 14 or 1)
+      crectfill(c.x,c.y,c.x+c.w,c.y+16-c.w*0.1875,new_bg and 14 or 1)
       if c.x>128 then
         c.x=-c.w
         c.y=rnd(120)
@@ -1150,7 +1150,7 @@ function _draw()
     if p.t<=0 then
       del(dead_particles,p)
     end
-    crectfill(p.x-p.t,p.y-p.t,p.x+p.t,p.y+p.t,14+p.t%2)
+    crectfill(p.x-p.t,p.y-p.t,p.x+p.t,p.y+p.t,14+p.t*5%2)
   end)
   
   -- credits
