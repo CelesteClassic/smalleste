@@ -550,7 +550,7 @@ fly_fruit={
     draw_obj_sprite(this)
     --spr(this.spr,this.x,this.y)
     for ox=-6,6,12 do
-      spr(not has_dashed and sin(this.off)<0 and (this.y>this.start and 47 or 46) or 45,this.x+ox,this.y-2,1,1,ox==-6)
+      spr(has_dashed or sin(this.off)>=0 and 45 or (this.y>this.start and 47 or 46),this.x+ox,this.y-2,1,1,ox==-6)
     end
   end
 }
@@ -874,7 +874,7 @@ function init_object(type,x,y,tile)
   }
 
   function obj.init_smoke(ox,oy)
-    init_object(smoke,obj.x+(ox or o),obj.y+(oy or 0),29)
+    init_object(smoke,obj.x+(ox or 0),obj.y+(oy or 0),29)
   end
 
   function obj.is_solid(ox,oy)
