@@ -673,7 +673,7 @@ platform={
     this.last=this.x
   end,
   draw=function(this)
-  		spr(11,this.x,this.y-1,2,1)
+      spr(11,this.x,this.y-1,2,1)
   end
 }
 
@@ -1097,7 +1097,7 @@ function _draw()
   if not is_title() then
     foreach(clouds, function(c)
       c.x+=c.spd
-      crectfill(c.x,c.y,c.x+c.w,c.y+4+(1-c.w/64)*12,new_bg and 14 or 1)
+      crectfill(c.x,c.y,c.x+c.w,c.y+12-c.w/64*12,new_bg and 14 or 1)
       if c.x>128 then
         c.x=-c.w
         c.y=rnd(120)
@@ -1105,8 +1105,10 @@ function _draw()
     end)
   end
 
+  local rx,ry=room.x*16,room.y*16
+
   -- draw bg terrain
-  map(room.x*16,room.y*16,0,0,16,16,4)
+  map(rx,ry,0,0,16,16,4)
 
   -- draw clouds + orb chest
   foreach(objects, function(o)
@@ -1116,7 +1118,7 @@ function _draw()
   end)
 
   -- draw terrain (offset if title screen)
-  map(room.x*16,room.y*16,is_title() and -4 or 0,0,16,16,2)
+  map(rx,ry,is_title() and -4 or 0,0,16,16,2)
   
   -- draw objects
   foreach(objects, function(o)
