@@ -673,8 +673,7 @@ platform={
     this.last=this.x
   end,
   draw=function(this)
-    spr(11,this.x,this.y-1)
-    spr(12,this.x+8,this.y-1)
+  		spr(11,this.x,this.y-1,2,1)
   end
 }
 
