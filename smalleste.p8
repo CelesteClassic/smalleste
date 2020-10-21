@@ -110,7 +110,7 @@ player={
     
     -- landing smoke
     if on_ground and not this.was_on_ground then
-      init_smoke(this.x,this.y+4)
+      this.init_smoke(0,4)
     end
 
     -- jump and dash input
@@ -140,7 +140,7 @@ player={
 
     -- dash startup period, accel toward dash target speed
     if this.dash_time>0 then
-      init_smoke(this.x,this.y)
+      this.init_smoke()
       this.dash_time-=1
       this.spd=vector(
         appr(this.spd.x,this.dash_target_x,this.dash_accel_x),
@@ -170,7 +170,7 @@ player={
         maxfall=0.4
         -- wall slide smoke
         if rnd(10)<2 then
-          init_smoke(this.x+h_input*6,this.y)
+          this.init_smoke(h_input*6)
         end
       end
 
@@ -187,7 +187,7 @@ player={
           this.jbuffer=0
           this.grace=0
           this.spd.y=-2
-          init_smoke(this.x,this.y+4)
+          this.init_smoke(0,4)
         else
           -- wall jump
           local wall_dir=(this.is_solid(-3,0) and -1 or this.is_solid(3,0) and 1 or 0)
@@ -197,7 +197,7 @@ player={
             this.spd=vector(-wall_dir*(maxrun+1),-2)
             if not this.is_ice(wall_dir*3,0) then
               -- wall jump smoke
-              init_smoke(this.x+wall_dir*6,this.y)
+              this.init_smoke(wall_dir*6)
             end
           end
         end
@@ -208,7 +208,7 @@ player={
       local d_half=3.5355339059 -- 5 * sqrt(2)
     
       if this.djump>0 and dash then
-        init_smoke(this.x,this.y)
+        this.init_smoke()
         this.djump-=1   
         this.dash_time=4
         has_dashed=true
@@ -232,7 +232,7 @@ player={
       elseif this.djump<=0 and dash then
         -- failed dash smoke
         psfx(9)
-        init_smoke(this.x,this.y)
+        this.init_smoke()
       end
     end
     
@@ -327,7 +327,7 @@ player_spawn={
           this.state=2
           this.delay=5
           shake=5
-          init_smoke(this.x,this.y+4)
+          this.init_smoke(0,4)
           sfx(5)
         end
       end
@@ -371,7 +371,7 @@ spring={
         hit.spd.y=-3
         hit.djump=max_djump
         this.delay=10
-        init_smoke(this.x,this.y)
+        this.init_smoke()
         -- crumble below spring
         local below=this.check(fall_floor,0,1)
         if below then
@@ -414,7 +414,7 @@ balloon={
       local hit=this.player_here()
       if hit and hit.djump<max_djump then
         psfx(6)
-        init_smoke(this.x,this.y)
+        this.init_smoke()
         hit.djump=max_djump
         this.spr=0
         this.timer=60
@@ -422,8 +422,8 @@ balloon={
     elseif this.timer>0 then
       this.timer-=1
     else 
-     psfx(7)
-     init_smoke(this.x,this.y)
+      psfx(7)
+      this.init_smoke()
       this.spr=22 
     end
   end,
@@ -461,7 +461,7 @@ fall_floor={
         psfx(7)
         this.state=0
         this.collideable=true
-        init_smoke(this.x,this.y)
+        this.init_smoke()
       end
     end
   end,
@@ -481,7 +481,7 @@ function break_fall_floor(obj)
   psfx(15)
     obj.state=1
     obj.delay=15--how long until it falls
-    init_smoke(obj.x,obj.y)
+    obj.init_smoke()
     local hit=obj.check(spring,0,-1)
     if hit then
       break_spring(hit)
@@ -503,10 +503,6 @@ smoke={
     end
   end
 }
-
-function init_smoke(x,y)
-  init_object(smoke,x,y,29)
-end
 
 fruit={
   if_not_fruit=true,
@@ -601,7 +597,7 @@ fake_wall={
       hit.dash_time=-1
       for ox=0,8,8 do
         for oy=0,8,8 do
-          init_smoke(this.x+ox,this.y+oy)
+          this.init_smoke(ox,oy)
         end
       end
       init_fruit(this,4,4)
@@ -725,8 +721,8 @@ big_chest={
         pause_player=true
         hit.spd=vector(0,0)
         this.state=1
-        init_smoke(this.x,this.y)
-        init_smoke(this.x+8,this.y)
+        this.init_smoke()
+        this.init_smoke(8)
         this.timer=60
         this.particles={}
       end
@@ -876,6 +872,10 @@ function init_object(type,x,y,tile)
     spd=vector(0,0),
     rem=vector(0,0),
   }
+
+  function obj.init_smoke(ox,oy)
+    init_object(smoke,obj.x+(ox or o),obj.y+(oy or 0),29)
+  end
 
   function obj.is_solid(ox,oy)
     return (oy>0 and not obj.check(platform,ox,0) and obj.check(platform,ox,oy)) or
