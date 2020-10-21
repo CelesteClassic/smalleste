@@ -780,7 +780,7 @@ orb={
 
 flag={
   init=function(this)
-    this.show=false
+    --this.show=false
     this.x+=5
     this.score=0
     for _ in pairs(got_fruit) do
@@ -788,7 +788,7 @@ flag={
     end
   end,
   draw=function(this)
-    this.spr=118+(frames/5)%3
+    this.spr=118+frames/5%3
     draw_obj_sprite(this)
     --spr(this.spr,this.x,this.y)
     if this.show then
