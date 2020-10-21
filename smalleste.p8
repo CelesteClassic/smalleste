@@ -1095,7 +1095,7 @@ function _draw()
 
   -- bg clouds effect
   if not is_title() then
-    foreach(clouds, function(c)
+    foreach(clouds,function(c)
       c.x+=c.spd
       crectfill(c.x,c.y,c.x+c.w,c.y+16-c.w*0.1875,new_bg and 14 or 1)
       if c.x>128 then
@@ -1111,7 +1111,7 @@ function _draw()
   map(rx,ry,0,0,16,16,4)
 
   -- draw clouds + orb chest
-  foreach(objects, function(o)
+  foreach(objects,function(o)
     if o.type==platform then
       draw_object(o)
     end
@@ -1121,7 +1121,7 @@ function _draw()
   map(rx,ry,is_title() and -4 or 0,0,16,16,2)
   
   -- draw objects
-  foreach(objects, function(o)
+  foreach(objects,function(o)
     if o.type~=platform then
       draw_object(o)
     end
@@ -1131,7 +1131,7 @@ function _draw()
   --map(room.x*16,room.y*16,0,0,16,16,8)
   
   -- particles
-  foreach(particles, function(p)
+  foreach(particles,function(p)
     p.x+=p.spd
     p.y+=sin(p.off)
     p.off+=min(0.05,p.spd/32)
@@ -1143,7 +1143,7 @@ function _draw()
   end)
   
   -- dead particles
-  foreach(dead_particles, function(p)
+  foreach(dead_particles,function(p)
     p.x+=p.dx
     p.y+=p.dy
     p.t-=0.2--1
