@@ -986,7 +986,7 @@ function load_room(x,y)
   -- entities
   for tx=0,15 do
     for ty=0,15 do
-      local tile=mget(room.x*16+tx,room.y*16+ty)
+      local tile=tile_at(tx,ty)
       if tiles[tile] then
         init_object(tiles[tile],tx*8,ty*8,tile)
       end
@@ -1236,7 +1236,6 @@ function spikes_at(x,y,w,h,xspd,yspd)
     end
   end
 end
-
 __gfx__
 000000000000000000000000088888800000000000000000000000000000000000aaaaa0000aaa000000a0000007707770077700000060000000600000060000
 000000000888888008888880888888880888888008888800000000000888888000a000a0000a0a000000a0000777777677777770000060000000600000060000
