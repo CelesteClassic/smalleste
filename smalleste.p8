@@ -864,7 +864,7 @@ function init_object(type,x,y,tile)
     collideable=true,
     solids=false,
     spr=tile,
-    flip=vector(false,false),
+    flip=vector(),
     x=x,
     y=y,
     hitbox=rectangle(0,0,8,8),
