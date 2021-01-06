@@ -550,7 +550,7 @@ fly_fruit={
     draw_obj_sprite(this)
     --spr(this.spr,this.x,this.y)
     for ox=-6,6,12 do
-      spr(has_dashed or sin(this.off)>=0 and 45 or (this.y>this.start and 47 or 46),this.x+ox,this.y-2,1,1,ox==-6)
+      spr(has_dashed or sin(this.off)>=0 and 45 or this.y>this.start and 47 or 46,this.x+ox,this.y-2,1,1,ox==-6)
     end
   end
 }
@@ -1224,14 +1224,14 @@ function tile_at(x,y)
 end
 
 function spikes_at(x,y,w,h,xspd,yspd)
-  for i=max(0,x\8),min(15,(x+w-1)/8) do
-    for j=max(0,y\8),min(15,(y+h-1)/8) do
-      local tile=tile_at(i,j)
-      if (tile==17 and ((y+h-1)%8>=6 or y+h==j*8+8) and yspd>=0) or
-         (tile==27 and y%8<=2 and yspd<=0) or
-         (tile==43 and x%8<=2 and xspd<=0) or
-         (tile==59 and ((x+w-1)%8>=6 or x+w==i*8+8) and xspd>=0) then
-         return true
+  local xw,yh=x+w-1,y+h-1
+  for i=max(0,x\8),min(15,xw/8) do
+    for j=max(0,y\8),min(15,yh/8) do
+      if ({[17]=yspd>=0 and yh%8>=6,
+           [27]=yspd<=0 and y%8<=2,
+           [43]=xspd<=0 and x%8<=2,
+           [59]=xspd>=0 and xw%8>=6})[tile_at(i,j)] then
+        return true
       end
     end
   end
