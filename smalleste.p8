@@ -194,7 +194,7 @@ player={
           if wall_dir~=0 then
             psfx(2)
             this.jbuffer=0
-            this.spd=vector(-wall_dir*(maxrun+1),-2)
+            this.spd=vector(wall_dir*(-1-maxrun),-2)
             if not this.is_ice(wall_dir*3,0) then
               -- wall jump smoke
               this.init_smoke(wall_dir*6)
@@ -439,7 +439,7 @@ balloon={
 fall_floor={
   init=function(this)
     this.state=0
-    this.delay=0
+    --this.delay=0
   end,
   update=function(this)
     -- idling
@@ -468,7 +468,7 @@ fall_floor={
   end,
   draw=function(this)
     if this.state~=2 then
-      spr(this.state==1 and 23+(15-this.delay)/5 or 23,this.x,this.y)
+      spr(this.state==1 and 26-this.delay/5 or 23,this.x,this.y)
     end
   end
 }
@@ -890,7 +890,14 @@ function init_object(type,x,y,tile)
   end
 
   function obj.is_flag(ox,oy,flag)
-    return tile_flag_at(obj.left()+ox,obj.top()+oy,obj.right()+ox,obj.bottom()+oy,flag)
+    for i=max(0,(obj.left()+ox)\8),min(15,(obj.right()+ox)/8) do
+      for j=max(0,(obj.top()+oy)\8),min(15,(obj.bottom()+oy)/8) do
+        if fget(tile_at(i,j),flag) then
+          return true
+        end
+      end
+    end
+    --return tile_flag_at(obj.left()+ox,obj.top()+oy,obj.right()+ox,obj.bottom()+oy,flag)
   end
   
   function obj.check(type,ox,oy)
@@ -1209,16 +1216,6 @@ end
 
 function maybe()
   return rnd(1)<0.5
-end
-
-function tile_flag_at(x1,y1,x2,y2,flag)
-  for i=max(0,x1\8),min(15,x2/8) do
-    for j=max(0,y1\8),min(15,y2/8) do
-      if fget(tile_at(i,j),flag) then
-        return true
-      end
-    end
-  end
 end
 
 function tile_at(x,y)
