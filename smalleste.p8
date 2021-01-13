@@ -44,11 +44,11 @@ function begin_game()
 end
 
 function level_index()
-  return room.x+room.y*8
+  return room.y*8+room.x+1
 end
 
 function is_title()
-  return level_index()==31
+  return level_index()==32
 end
 
 -- [effects]
@@ -100,7 +100,7 @@ player={
     local h_input=btn(➡️) and 1 or btn(⬅️) and -1 or 0
     
     -- spike collision / bottom death
-    if spikes_at(this.x+this.hitbox.x,this.y+this.hitbox.y,this.hitbox.w,this.hitbox.h,this.spd.x,this.spd.y) or 
+    if spikes_at(this.left(),this.top(),this.right(),this.bottom(),this.spd.x,this.spd.y) or 
       this.y>128 then
       kill_player(this)
     end
@@ -244,7 +244,7 @@ player={
       1+(this.spd.x~=0 and h_input~=0 and this.spr_off%4 or 0) -- walk or stand
     
     -- exit level off the top (except summit)
-    if this.y<-4 and level_index()<30 then
+    if this.y<-4 and level_index()<31 then
       next_room()
     end
     
@@ -439,6 +439,7 @@ balloon={
 fall_floor={
   init=function(this)
     this.state=0
+    this.delay=0
   end,
   update=function(this)
     -- idling
@@ -467,11 +468,7 @@ fall_floor={
   end,
   draw=function(this)
     if this.state~=2 then
-      if this.state~=1 then
-        spr(23,this.x,this.y)
-      else
-        spr(23+(15-this.delay)/5,this.x,this.y)
-      end
+      spr(this.state==1 and 23+(15-this.delay)/5 or 23,this.x,this.y)
     end
   end
 }
@@ -550,7 +547,7 @@ fly_fruit={
     draw_obj_sprite(this)
     --spr(this.spr,this.x,this.y)
     for ox=-6,6,12 do
-      spr(has_dashed or sin(this.off)>=0 and 45 or this.y>this.start and 47 or 46,this.x+ox,this.y-2,1,1,ox==-6)
+      spr((has_dashed or sin(this.off)>=0) and 45 or this.y>this.start and 47 or 46,this.x+ox,this.y-2,1,1,ox==-6)
     end
   end
 }
@@ -815,13 +812,13 @@ room_title={
       destroy_object(this)
     elseif this.delay<0 then
       rectfill(24,58,104,70,0)
-      if room.x==3 and room.y==1 then
+      local level=level_index()
+      if level==12 then
         ?"old site",48,62,7
-      elseif level_index()==30 then
+      elseif level==31 then
         ?"summit",52,62,7
       else
-        local level=(1+level_index())*100
-        ?level.." m",52+(level<1000 and 2 or 0),62,7
+        ?level.."00 m",level<10 and 54 or 54,62,7
       end
       draw_time(4,4)
     end
@@ -872,6 +869,11 @@ function init_object(type,x,y,tile)
     rem=vector(0,0),
   }
 
+  function obj.left() return obj.x+obj.hitbox.x end
+  function obj.right() return obj.left()+obj.hitbox.w-1 end
+  function obj.top() return obj.y+obj.hitbox.y end
+  function obj.bottom() return obj.top()+obj.hitbox.h-1 end
+
   function obj.init_smoke(ox,oy)
     init_object(smoke,obj.x+(ox or 0),obj.y+(oy or 0),29)
   end
@@ -888,16 +890,16 @@ function init_object(type,x,y,tile)
   end
 
   function obj.is_flag(ox,oy,flag)
-    return tile_flag_at(obj.x+obj.hitbox.x+ox,obj.y+obj.hitbox.y+oy,obj.hitbox.w,obj.hitbox.h,flag)
+    return tile_flag_at(obj.left()+ox,obj.top()+oy,obj.right()+ox,obj.bottom()+oy,flag)
   end
   
   function obj.check(type,ox,oy)
     for other in all(objects) do
       if other and other.type==type and other~=obj and other.collideable and
-        other.x+other.hitbox.x+other.hitbox.w>obj.x+obj.hitbox.x+ox and 
-        other.y+other.hitbox.y+other.hitbox.h>obj.y+obj.hitbox.y+oy and
-        other.x+other.hitbox.x<obj.x+obj.hitbox.x+obj.hitbox.w+ox and 
-        other.y+other.hitbox.y<obj.y+obj.hitbox.y+obj.hitbox.h+oy then
+        other.right()>=obj.left()+ox and 
+        other.bottom()>=obj.top()+oy and
+        other.left()<=obj.right()+ox and 
+        other.top()<=obj.bottom()+oy then
         return other
       end
     end
@@ -968,13 +970,13 @@ function restart_room()
 end
 
 function next_room()
-  local next_lvl=level_index()+1
-  if next_lvl==11 or next_lvl==21 or next_lvl==30 then -- quiet for old site, 2200m, summit
+  local level=level_index()
+  if level==11 or level==21 or level==30 then -- quiet for old site, 2200m, summit
     music(30,500,7)
-  elseif next_lvl==12 then -- 1300m
+  elseif level==12 then -- 1300m
     music(20,500,7)
   end
-  load_room(next_lvl%8,next_lvl\8)
+  load_room(level%8,level\8)
 end
 
 function load_room(x,y)
@@ -1002,7 +1004,7 @@ end
 
 function _update()
   frames+=1
-  if level_index()<30 then
+  if level_index()<31 then
     seconds+=frames\30
     minutes+=seconds\60
     seconds%=60
@@ -1161,7 +1163,7 @@ function _draw()
   end
   
   -- summit blinds effect
-  if level_index()==30 and objects[2].type==player then
+  if level_index()==31 and objects[2].type==player then
     local diff=min(24,40-abs(objects[2].x-60))
     rectfill(0,0,diff,127,0)
     rectfill(127-diff,0,127,127,0)
@@ -1209,9 +1211,9 @@ function maybe()
   return rnd(1)<0.5
 end
 
-function tile_flag_at(x,y,w,h,flag)
-  for i=max(0,x\8),min(15,(x+w-1)/8) do
-    for j=max(0,y\8),min(15,(y+h-1)/8) do
+function tile_flag_at(x1,y1,x2,y2,flag)
+  for i=max(0,x1\8),min(15,x2/8) do
+    for j=max(0,y1\8),min(15,y2/8) do
       if fget(tile_at(i,j),flag) then
         return true
       end
@@ -1223,14 +1225,13 @@ function tile_at(x,y)
   return mget(room.x*16+x,room.y*16+y)
 end
 
-function spikes_at(x,y,w,h,xspd,yspd)
-  local xw,yh=x+w-1,y+h-1
-  for i=max(0,x\8),min(15,xw/8) do
-    for j=max(0,y\8),min(15,yh/8) do
-      if ({[17]=yspd>=0 and yh%8>=6,
-           [27]=yspd<=0 and y%8<=2,
-           [43]=xspd<=0 and x%8<=2,
-           [59]=xspd>=0 and xw%8>=6})[tile_at(i,j)] then
+function spikes_at(x1,y1,x2,y2,xspd,yspd)
+  for i=max(0,x1\8),min(15,x2/8) do
+    for j=max(0,y1\8),min(15,y2/8) do
+      if ({[17]=yspd>=0 and y2%8>=6,
+           [27]=yspd<=0 and y1%8<=2,
+           [43]=xspd<=0 and x1%8<=2,
+           [59]=xspd>=0 and x2%8>=6})[tile_at(i,j)] then
         return true
       end
     end
