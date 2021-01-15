@@ -260,7 +260,7 @@ player={
     end
     -- draw player hair and sprite
     set_hair_color(this.djump)
-    draw_hair(this,this.flip.x and -1 or 1)
+    draw_hair(this)
     draw_obj_sprite(this)
     --spr(this.spr,this.x,this.y,1,1,this.flip.x,this.flip.y)   
     unset_hair_color()
@@ -278,8 +278,8 @@ function set_hair_color(djump)
   pal(8,djump==1 and 8 or djump==2 and 7+(frames\3)%2*4 or 12)
 end
 
-function draw_hair(obj,facing)
-  local last=vector(obj.x+4-facing*2,obj.y+(btn(⬇️) and 4 or 3))
+function draw_hair(obj)
+  local last=vector(obj.x+4-(obj.flip.x and -1 or 1)*2,obj.y+(btn(⬇️) and 4 or 3))
   for i,h in pairs(obj.hair) do
     h.x+=(last.x-h.x)/1.5
     h.y+=(last.y+0.5-h.y)/1.5
@@ -289,7 +289,7 @@ function draw_hair(obj,facing)
 end
 
 function unset_hair_color()
-  pal(8,8)
+  pal() -- use pal(8,8) to preserve other palette swaps
 end
 
 -- [other entities]
@@ -343,7 +343,7 @@ player_spawn={
   end,
   draw=function(this)
     set_hair_color(max_djump)
-    draw_hair(this,1)
+    draw_hair(this)
     draw_obj_sprite(this)
     --spr(this.spr,this.x,this.y)
     unset_hair_color()
