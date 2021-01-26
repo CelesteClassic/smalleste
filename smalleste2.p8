@@ -4,7 +4,7 @@ __lua__
 -- celeste2
 -- exok games
 
-level_index, level_intro = 0, 0
+level_index,level_intro=0,0
 
 function game_start()
   
@@ -246,6 +246,10 @@ function approach(x,target,max_delta)
   return x<target and min(x+max_delta,target) or max(x-max_delta,target)
 end
 
+function clamp(val,low,high)
+  return max(low,min(high,val))
+end
+
 function psfx(id,off,len,lock)
   if sfx_timer<=0 or lock then
     sfx(id,3,off,len)
@@ -373,15 +377,15 @@ c_offset=0
 camera_modes={
     -- 1: Intro
     function (px,py)
-      camera_target_x=px<42 and 0 or max(40,min(level.width*8-128,px-48))
+      camera_target_x=px<42 and 0 or clamp(px-48,40,level.width*8-128)
     end,
     -- 2: Intro 2
     function (px,py)
-      camera_target_x,camera_target_y=px<120 and 0 or px>136 and 128 or px-64,max(0,min(level.height*8-128,py-64))
+      camera_target_x,camera_target_y=px<120 and 0 or px>136 and 128 or px-64,clamp(py-64,0,level.height*8-128)
     end,
     -- 3: Level 1
     function (px,py)
-      camera_target_x,camera_target_y=max(0,min(level.width*8-128,px-56)),py<level.camera_barrier_y*8+3 and 0 or level.camera_barrier_y*8
+      camera_target_x,camera_target_y=clamp(px-56,0,level.width*8-128),py<level.camera_barrier_y*8+3 and 0 or level.camera_barrier_y*8
       for i,b in ipairs(level.camera_barriers_x) do
         camera_x_barrier(b,px,py)
       end
@@ -394,11 +398,11 @@ camera_modes={
       if py%128>4 and py%128<124 then
         py=(py\128)*128+64
       end
-      camera_target_x,camera_target_y=max(0,min(level.width*8-128,px-64)),max(0,min(level.height*8-128,py-64))
+      camera_target_x,camera_target_y=clamp(px-64,0,level.width*8-128),clamp(py-64,0,level.height*8-128)
     end,
     -- 5: Level 3-1 and 3-3
     function (px,py)
-      camera_target_x=max(0,min(level.width*8-128,px-32))
+      camera_target_x=clamp(px-32,0,level.width*8-128)
     end,
     -- 6: Level 3-2
     function (px,py)
@@ -411,7 +415,7 @@ camera_modes={
         c_flag=true
         c_offset=96
       end
-      camera_target_x=max(0,min(level.width*8-128,px-c_offset))
+      camera_target_x=clamp(px-c_offset,0,level.width*8-128)
       for i,b in ipairs(level.camera_barriers_x) do
         camera_x_barrier(b,px,py)
       end
@@ -422,11 +426,11 @@ camera_modes={
     --7: Level 3-3
     function (px,py)
       c_offset=px>420 and (px<436 and px-388 or 48) or 32
-      camera_target_x=max(0,min(level.width*8-128,px-c_offset))
+      camera_target_x=clamp(px-c_offset,0,level.width*8-128)
     end,
     --8: End
     function (px,py)
-      camera_target_y=max(0,min(level.height*8-128,py-32))
+      camera_target_y=clamp(py-32,0,level.height*8-128)
     end
 }
 
@@ -436,7 +440,7 @@ function snap_camera()
 end
 
 function tile_y(py)
-  return max(0,min(py\8,level.height-1))
+  return clamp(py\8,0,level.height-1)--max(0,min(py\8,level.height-1))
 end
 
 function goto_level(index)
@@ -495,16 +499,10 @@ end
 -- gets the tile at the given location from the loaded level
 function tile_at(x,y)
   if (x<0 or y<0 or x>=level.width or y>=level.height) then return 0 end
-  return peek(0x4300 + x + y * level.width)
+  return peek(0x4300+x+y*level.width)
 end
 
 input_x,input_jump_pressed,input_grapple_pressed,axis_x_value=0,0,0,0
---input_jump = false
---input_jump_pressed = 0
---input_grapple = false
---input_grapple_pressed = 0
---axis_x_value = 0
---axis_x_turned = false
 
 function update_input()
     -- axes
@@ -545,496 +543,432 @@ function consume_grapple_press()
   return val
 end
 
-objects = {}
-types = {}
-lookup = {}
+objects,types,lookup={},{},{}
 function lookup.__index(self, i) return self.base[i] end
 
-object = {}
-object.speed_x = 0;
-object.speed_y = 0;
-object.remainder_x = 0;
-object.remainder_y = 0;
-object.hit_x = 0
-object.hit_y = 0
-object.hit_w = 8
-object.hit_h = 8
-object.grapple_mode = 0
-object.hazard = 0
-object.facing = 1
-object.freeze = 0
+object = {
+ speed_x=0,
+ speed_y=0,
+ remainder_x=0,
+ remainder_y=0,
+ hit_x=0,
+ hit_y=0,
+ hit_w=8,
+ hit_h=8,
+ grapple_mode=0,
+ hazard=0,
+ facing=1,
+ freeze=0
+}
 
 function object.move_x(self, x, on_collide) 
-  self.remainder_x += x
-  local mx = flr(self.remainder_x + 0.5)
-  self.remainder_x -= mx
+  self.remainder_x+=x
+  local mx=flr(self.remainder_x+0.5)
+  self.remainder_x-=mx
 
-  local total = mx
-  local mxs = sgn(mx)
-  while (mx != 0)
+  local total,mxs=mx,sgn(mx)
+  while mx!=0
   do
-    if self:check_solid(mxs, 0) then
+    if self:check_solid(mxs,0) then
       if on_collide then
-        return on_collide(self, total - mx, total)
+        return on_collide(self,total-mx,total)
       end
       return true
     else
-      self.x += mxs
-      mx -= mxs
+      self.x+=mxs
+      mx-=mxs
     end
   end
-
-  return false
 end
 
 function object.move_y(self, y, on_collide)
-  self.remainder_y += y
-  local my = flr(self.remainder_y + 0.5)
-  self.remainder_y -= my
+  self.remainder_y+=y
+  local my=flr(self.remainder_y+0.5)
+  self.remainder_y-=my
   
-  local total = my
-  local mys = sgn(my)
-  while (my != 0)
+  local total,mys=my,sgn(my)
+  local mys=sgn(my)
+  while my!=0
   do
-    if self:check_solid(0, mys) then
+    if self:check_solid(0,mys) then
       if on_collide then
-        return on_collide(self, total - my, total)
+        return on_collide(self,total-my,total)
       end
       return true
     else
-      self.y += mys
-      my -= mys
+      self.y+=mys
+      my-=mys
     end
   end
-
-  return false
 end
 
-function object.on_collide_x(self, moved, target)
-  self.remainder_x = 0
-  self.speed_x = 0
+function object.on_collide_x(self,moved,target)
+  self.remainder_x,self.speed_x=0,0
   return true
 end
 
-function object.on_collide_y(self, moved, target)
-  self.remainder_y = 0
-  self.speed_y = 0
+function object.on_collide_y(self,moved,target)
+  self.remainder_y,self.speed_y=0,0
   return true
 end
 
 function object.update() end
+
 function object.draw(self)
-  spr(self.spr, self.x, self.y, 1, 1, self.flip_x, self.flip_y)
+  spr(self.spr,self.x,self.y,1,1,self.flip_x,self.flip_y)
 end
 
-function object.overlaps(self, b, ox, oy)
-  if self == b then return false end
-  ox = ox or 0
-  oy = oy or 0
+function object.overlaps(self,b,ox,oy)
+  if self==b then return end
+  ox,oy=ox or 0,oy or 0
   return
-    ox + self.x + self.hit_x + self.hit_w > b.x + b.hit_x and
-    oy + self.y + self.hit_y + self.hit_h > b.y + b.hit_y and
-    ox + self.x + self.hit_x < b.x + b.hit_x + b.hit_w and
-    oy + self.y + self.hit_y < b.y + b.hit_y + b.hit_h
+    ox+self.x+self.hit_x+self.hit_w>b.x+b.hit_x and
+    oy+self.y+self.hit_y+self.hit_h>b.y+b.hit_y and
+    ox+self.x+self.hit_x<b.x+b.hit_x+b.hit_w and
+    oy+self.y+self.hit_y<b.y+b.hit_y+b.hit_h
 end
 
-function object.contains(self, px, py)
+function object.contains(self,px,py)
   return
-    px >= self.x + self.hit_x and
-    px < self.x + self.hit_x + self.hit_w and
-    py >= self.y + self.hit_y and
-    py < self.y + self.hit_y + self.hit_h
+    px>=self.x+self.hit_x and
+    px<self.x+self.hit_x+self.hit_w and
+    py>=self.y+self.hit_y and
+    py<self.y+self.hit_y+self.hit_h
 end
 
 function object.check_solid(self, ox, oy)
-  ox = ox or 0
-  oy = oy or 0
-
-  for i = flr((ox + self.x + self.hit_x) / 8),flr((ox + self.x + self.hit_x + self.hit_w - 1) / 8) do
-    for j = tile_y(oy + self.y + self.hit_y),tile_y(oy + self.y + self.hit_y + self.hit_h - 1) do
-      if fget(tile_at(i, j), 1) then
+  ox,oy=ox or 0,oy or 0
+  for i=(ox + self.x + self.hit_x)\8,(ox + self.x + self.hit_x + self.hit_w-1)\8 do
+    for j=tile_y(oy+self.y+self.hit_y),tile_y(oy+self.y+self.hit_y+self.hit_h-1) do
+      if fget(tile_at(i, j),1) then
         return true
       end
     end
   end
-
   for o in all(objects) do
-    if o.solid and o != self and not o.destroyed and self:overlaps(o, ox, oy) then
+    if o.solid and o!=self and not o.destroyed and self:overlaps(o, ox, oy) then
       return true
     end
   end
-
-  return false
 end
 
-function object.corner_correct(self, dir_x, dir_y, side_dist, look_ahead, only_sign, func)
-  look_ahead = look_ahead or 1
-  only_sign = only_sign or 1
-
-  if dir_x ~= 0 then
-    for i = 1, side_dist do
-      for s = 1, -2, -2 do
-        if s == -only_sign then
+function object.corner_correct(self,dir_x,dir_y,side_dist,look_ahead,only_sign,func)
+  look_ahead,only_sign=look_ahead or 1,only_sign or 1
+  if dir_x~=0 then
+    for i=1,side_dist do
+      for s=1,-2,-2 do
+        if s==-only_sign then
           goto continue_x
         end
-
-        if not self:check_solid(dir_x, i * s) and (not func or func(self, dir_x, i * s)) then
-          self.x += dir_x
-          self.y += i * s
+        if not self:check_solid(dir_x,i*s) and (not func or func(self,dir_x,i*s)) then
+          self.x+=dir_x
+          self.y+=i*s
           return true
         end
-
         ::continue_x::
       end
     end
-  elseif dir_y ~= 0 then
-    for i = 1, side_dist do
-      for s = 1, -1, -2 do
-        if s == -only_sign then
+  elseif dir_y~=0 then
+    for i=1,side_dist do
+      for s=1,-1,-2 do
+        if s==-only_sign then
           goto continue_y
         end
-
-        if not self:check_solid(i * s, dir_y) and (not func or func(self, i * s, dir_y)) then
-          self.x += i * s
-          self.y += dir_y
+        if not self:check_solid(i*s,dir_y) and (not func or func(self,i*s,dir_y)) then
+          self.x+=i*s
+          self.y+=dir_y
           return true
         end
-
         ::continue_y::
       end
     end
   end
-
-  return false
 end
 
-function id(tx, ty) return level_index * 100 + flr(tx) + flr(ty) * 128 end
+function id(tx,ty) return level_index*100+flr(tx)+flr(ty)*128 end
 
-function create(type, x, y)
-  local obj = {}
-  obj.base = type
-  obj.x = x
-  obj.y = y
-  obj.id = id(flr(x/8), flr(y/8))
-  setmetatable(obj, lookup)
-  add(objects, obj)
-  if obj.init then obj.init(obj) end
+function create(type,x,y)
+  local obj=setmetatable({
+    base=type,
+    x=x,
+    y=y,
+    id=id(x\8,y\8)
+  },lookup)
+  add(objects, obj);
+  (obj.init or stat)(obj)
   return obj
 end
 
 function new_type(spr)
-  local obj = {}
-  obj.spr = spr
-  obj.base = object
-  setmetatable(obj, lookup)
+  local obj=setmetatable({
+    spr=spr,
+    base=object
+  },lookup)
   add(types, obj)
   return obj
 end
 
 
-grapple_pickup = new_type(20)
+grapple_pickup=new_type(20)
 function grapple_pickup.draw(self)
-  spr(self.spr, self.x, self.y + sin(time()) * 2, 1, 1, not self.right)
+  spr(self.spr,self.x,self.y+sin(time())*2,1,1,not self.right)
 end
 
-spike_v = new_type(36)
+spike_v=new_type(36)
 function spike_v.init(self)
-  if not self:check_solid(0, 1) then
-    self.flip_y = true
-    self.hazard = 3
+  if not self:check_solid(0,1) then
+    self.flip_y,self.hazard=true,3
   else
-    self.hit_y = 5
-    self.hazard = 2
+    self.hit_y,self.hazard=5,2
   end
   self.hit_h = 3
 end
 
-spike_h = new_type(37)
+spike_h=new_type(37)
 function spike_h.init(self)
-  if self:check_solid(-1, 0) then
-    self.flip_x = true
-    self.hazard = 4
+  if self:check_solid(-1,0) then
+    self.flip_x,self.hazard=true,4
   else
-    self.hit_x = 5
-    self.hazard = 5
+    self.hit_x,self.hazard=5,5
   end
-  self.hit_w = 3
+  self.hit_w=3
 end
 
-snowball = new_type(62)
-snowball.grapple_mode = 3
-snowball.holdable = true
-snowball.thrown_timer = 0
-snowball.stop = false
-snowball.hp = 6
+snowball=new_type(62)
+snowball.grapple_mode,snowball.holdable,snowball.thrown_timer,snowball.hp=3,true,0,6
 function snowball.update(self)
   if not self.held then
     self.thrown_timer -= 1
-
     --speed
     if self.stop then
-      self.speed_x = approach(self.speed_x, 0, 0.25)
-      if self.speed_x == 0 then
-        self.stop = false
+      self.speed_x=approach(self.speed_x,0,0.25)
+      if self.speed_x==0 then
+        self.stop=false
       end
     else
-      if self.speed_x != 0 then
-        self.speed_x = approach(self.speed_x, sgn(self.speed_x) * 2, 0.1)
+      if self.speed_x!=0 then
+        self.speed_x=approach(self.speed_x,sgn(self.speed_x)*2,0.1)
       end
     end
 
     --gravity
-    if not self:check_solid(0, 1) then
-      self.speed_y = approach(self.speed_y, 4, 0.4)
+    if not self:check_solid(0,1) then
+      self.speed_y=approach(self.speed_y,4,0.4)
     end
 
     --apply
-    self:move_x(self.speed_x, self.on_collide_x)
-    self:move_y(self.speed_y, self.on_collide_y)
+    self:move_x(self.speed_x,self.on_collide_x)
+    self:move_y(self.speed_y,self.on_collide_y)
 
     --bounds
-    if self.y > level.height * 8 + 24 then
-      self.destroyed = true
+    if self.y>level.height*8+24 then
+      self.destroyed=true
     end
   end
 end
-function snowball.on_collide_x(self, moved, total)
-  if self:corner_correct(sgn(self.speed_x), 0, 2, 2, 1) then
-    return false
+function snowball.on_collide_x(self,moved,total)
+  if self:corner_correct(sgn(self.speed_x),0,2,2,1) then
+    return
   end
-
   if self:hurt() then
     return true
   end
-
-  self.speed_x *= -1
-  self.remainder_x = 0
-  self.freeze = 1
-  psfx(17, 0, 2)
+  self.speed_x*=-1
+  self.remainder_x,self.freeze=0,1
+  psfx(17,0,2)
   return true
 end
-function snowball.on_collide_y(self, moved, total)
-  if self.speed_y < 0 then
-    self.speed_y = 0
-    self.remainder_y = 0
+function snowball.on_collide_y(self,moved,total)
+  if self.speed_y<0 then
+    self.speed_y,self.remainder_y=0,0
     return true
   end
-
-  if self.speed_y >= 4 then
-    self.speed_y = -2
-    psfx(17, 0, 2)
-  elseif self.speed_y >= 1 then
-    self.speed_y = -1
-    psfx(17, 0, 2)
+  if self.speed_y>=4 then
+    self.speed_y=-2
+    psfx(17,0,2)
+  elseif self.speed_y>=1 then
+    self.speed_y=-1
+    psfx(17,0,2)
   else
-    self.speed_y = 0
+    self.speed_y=0
   end
-  self.remainder_y = 0
+  self.remainder_y=0
   return true
 end
-function snowball.on_release(self, thrown)
+function snowball.on_release(self,thrown)
   if not thrown then
-    self.stop = true
+    self.stop=true
   end
-  self.thrown_timer = 8
+  self.thrown_timer=8
 end
 function snowball.hurt(self)
-  self.hp -= 1
-  if self.hp <= 0 then
-    psfx(8, 16, 4)
-    self.destroyed = true
+  self.hp-=1
+  if self.hp<=0 then
+    psfx(8,16,4)
+    self.destroyed=true
     return true
   end
-  return false
 end
-function snowball.bounce_overlaps(self, o)
-  if self.speed_x != 0 then
-    self.hit_w = 12
-    self.hit_x = -2
-    local ret = self:overlaps(o)
-    self.hit_w = 8
-    self.hit_x = 0
+function snowball.bounce_overlaps(self,o)
+  if self.speed_x!=0 then
+    self.hit_w,self.hit_x=12,-2
+    local ret=self:overlaps(o)
+    self.hit_w=8
+    self.hit_x=0
     return ret
   else
     return self:overlaps(o)
   end
 end
 function snowball.draw(self)
-  pal(7, 1)
-  spr(self.spr, self.x, self.y + 1)
+  pal(7,1)
+  spr(self.spr,self.x,self.y+1)
   pal()
-  spr(self.spr, self.x, self.y)
+  spr(self.spr,self.x,self.y)
 end
 
-springboard = new_type(11)
-springboard.grapple_mode = 3
-springboard.holdable = true
-springboard.thrown_timer = 0
+springboard=new_type(11)
+springboard.grapple_mode,springboard.holdable,springboard.thrown_timer=3,true,0
 function springboard.update(self)
   if not self.held then
-    self.thrown_timer -= 1
-
+    self.thrown_timer-=1
     --friction and gravity  
-    if self:check_solid(0, 1) then
-      self.speed_x = approach(self.speed_x, 0, 1)
+    if self:check_solid(0,1) then
+      self.speed_x=approach(self.speed_x,0,1)
     else
-      self.speed_x = approach(self.speed_x, 0, 0.2)
-      self.speed_y = approach(self.speed_y, 4, 0.4)
+      self.speed_x=approach(self.speed_x,0,0.2)
+      self.speed_y=approach(self.speed_y,4,0.4)
     end
-
     --apply
-    self:move_x(self.speed_x, self.on_collide_x)
-    self:move_y(self.speed_y, self.on_collide_y)
-
-    if self.player != nil then
+    self:move_x(self.speed_x,self.on_collide_x)
+    self:move_y(self.speed_y,self.on_collide_y)
+    if self.player then
       self.player:move_y(self.speed_y)
     end
-
-    self.destroyed = self.y > level.height * 8 + 24
+    self.destroyed=self.y>level.height*8+24
   end
 end
-function springboard.on_collide_x(self, moved, total)
-  self.speed_x *= -0.2
-  self.remainder_x = 0
-  self.freeze = 1
+function springboard.on_collide_x(self,moved,total)
+  self.speed_x*=-0.2
+  self.remainder_x,self.freeze=0,1
   return true
 end
-function springboard.on_collide_y(self, moved, total)
-  if self.speed_y < 0 then
-    self.speed_y = 0
-    self.remainder_y = 0
+function springboard.on_collide_y(self,moved,total)
+  if self.speed_y<0 then
+    self.speed_y,self.remainder_y=0,0
     return true
   end
-
-  if self.speed_y >= 2 then
-    self.speed_y *= -0.4
+  if self.speed_y>=2 then
+    self.speed_y*=-0.4
   else
-    self.speed_y = 0
+    self.speed_y=0
   end
-  self.remainder_y = 0
-  self.speed_x *= 0.5
+  self.remainder_y=0
+  self.speed_x*=0.5
   return true
 end
-function springboard.on_release(self, thrown)
+function springboard.on_release(self,thrown)
   if thrown then
-    self.thrown_timer = 5
+    self.thrown_timer=5
   end
 end
 
-grappler = new_type(46)
-grappler.grapple_mode = 2
-grappler.hit_x = -1
-grappler.hit_y = -1
-grappler.hit_w = 10
-grappler.hit_h = 10
+grappler=new_type(46)
+grappler.grapple_mode,grappler.hit_x,grappler.hit_y,grappler.hit_w,grappler.hit_h=2,-1,-1,10,10
 
-bridge = new_type(63)
+bridge=new_type(63)
 function bridge.update(self)
-  self.y += self.falling and 3 or 0
+  self.y+=self.falling and 3 or 0
 end
 
-berry = new_type(21)
+berry=new_type(21)
 function berry.update(self)
   if self.collected then
-    self.timer += 1
-    self.y -= 0.2 * (self.timer > 5 and 1 or 0)
-    self.destroyed = self.timer > 30
+    self.timer+=1
+    self.y-=0.2*(self.timer > 5 and 1 or 0)
+    self.destroyed=self.timer > 30
   elseif self.player then
-    self.x += (self.player.x - self.x) / 8
-    self.y += (self.player.y - 4 - self.y) / 8
-    self.flash -= 1
+    self.x+=(self.player.x-self.x)/8
+    self.y+=(self.player.y-4-self.y)/8
+    self.flash-=1
 
-    if self.player:check_solid(0, 1) and self.player.state != 99 then self.ground += 1 else self.ground = 0 end
+    if self.player:check_solid(0,1) and self.player.state!=99 then self.ground+=1 else self.ground=0 end
 
-    if self.ground > 3 or self.player.x > level.width * 8 - 16 or self.player.last_berry != self then
-      psfx(8, 8, 8, 20)
-      collected[self.id] = true
-      berry_count += 1
-      self.collected = true
-      self.timer = 0
-      self.draw = score
+    if self.ground>3 or self.player.x>level.width*8-16 or self.player.last_berry!=self then
+      psfx(8,8,8,20)
+      collected[self.id]=true
+      berry_count+=1
+      self.collected,self.timer,self.draw=true,0,score
     end
   end
 end
-function berry.collect(self, player)
+function berry.collect(self,player)
   if not self.player then
-    self.player = player
-    player.last_berry = self
-    self.flash = 5
-    self.ground = 0
-    psfx(7, 12, 4)
+    self.player,player.last_berry,self.flash,self.ground=player,self,5,0
+    psfx(7,12,4)
   end
 end
 function berry.draw(self)
-  if (self.timer or 0) < 5 then
+  if (self.timer or 0)<5 then
     grapple_pickup.draw(self)
-    if (self.flash or 0) > 0 then
-      circ(self.x + 4, self.y + 4, self.flash * 3, 7)
-      circfill(self.x + 4, self.y + 4, 5, 7)
+    if (self.flash or 0)>0 then
+      circ(self.x+4,self.y+4,self.flash*3,7)
+      circfill(self.x+4,self.y+4,5,7)
     end
   else
-    print("1000", self.x - 4, self.y + 1, 8)
-    print("1000", self.x - 4, self.y, self.timer % 4 < 2 and 7 or 14)
+    ?"1000",self.x-4,self.y+1,8
+    ?"1000",self.x-4,self.y,self.timer%4<2 and 7 or 14
   end
 end
 
-crumble = new_type(19)
-crumble.solid = true
-crumble.grapple_mode = 1
+crumble=new_type(19)
+crumble.solid,crumble.grapple_mode=true,1
 function crumble.init(self)
-  self.time = 0
-  self.breaking = false
-  self.ox = self.x
-  self.oy = self.y
+  self.time,self.ox,self.oy=0,self.x,self.x
 end
 function crumble.update(self)
   if self.breaking then
-    self.time += 1
-    if self.time > 10 then
-      self.x = -32
-      self.y = -32
+    self.time+=1
+    if self.time>10 then
+      self.x,self.y=-32,-32
     end
-    if self.time > 90 then
-      self.x = self.ox
-      self.y = self.oy
-
-      local can_respawn = true
+    if self.time>90 then
+      self.x,self.y=self.ox,self.oy
+      local can_respawn=true
       for o in all(objects) do
-        if self:overlaps(o) then can_respawn = false break end
+        if self:overlaps(o) then can_respawn=false break end
       end
 
       if can_respawn then
-        self.breaking = false
-        self.time = 0
-        psfx(17, 5, 3)
+        self.breaking,self.time=false,0
+        psfx(17,5,3)
       else
-        self.x = -32
-        self.y = -32
+        self.x,self.y=-32,-32
       end
     end
   end
 end
 function crumble.draw(self)
   object.draw(self)
-  if self.time > 2 then
+  if self.time>2 then
     fillp(0b1010010110100101.1)
-    rectfill(self.x, self.y, self.x + 7, self.y + 7, 1)
+    rectfill(self.x,self.y,self.x+7,self.y+7,1)
     fillp()
   end
 end
 
-checkpoint = new_type(13)
+checkpoint=new_type(13)
 function checkpoint.init(self)
-  if level_checkpoint == self.id then
-    create(player, self.x, self.y)
+  if level_checkpoint==self.id then
+    create(player,self.x,self.y)
   end
 end
 function checkpoint.draw(self)
-  if level_checkpoint == self.id then
-    sspr(104, 0, 1, 8, self.x, self.y)
-    pal(2, 11)
+  if level_checkpoint==self.id then
+    sspr(104,0,1,8,self.x,self.y)
+    pal(2,11)
     for i=1,7 do
-      sspr(104 + i, 0, 1, 8, self.x + i, self.y + sin(-time() * 2 + i * 0.25) * (i - 1) * 0.2)
+      sspr(104+i,0,1,8,self.x+i,self.y+sin(-time()*2+i*0.25)*(i-1)*0.2)
     end
     pal()
   else
@@ -1042,29 +976,39 @@ function checkpoint.draw(self)
   end
 end
 
-function make_spawner(tile, dir)
-  local spawner = new_type(tile)
+function make_spawner(tile,dir)
+  local spawner=new_type(tile)
   function spawner.init(self)
-    self.timer = (self.x / 8) % 32
-    self.spr = -1
+    self.timer,self.spr=(self.x/8)%32,-1
   end
   function spawner.update(self)
-    self.timer += 1
-    if self.timer >= 32 and abs(self.x - 64 - camera_x) < 128 then
-      self.timer = 0
-      local snowball = create(snowball, self.x, self.y - 8)
-      snowball.speed_x = dir * 2
-      snowball.speed_y = 4
-      psfx(17, 5, 3)
+    self.timer+=1
+    if self.timer>=32 and abs(self.x-64-camera_x)<128 then
+      self.timer=0
+      local snowball=create(snowball,self.x,self.y-8)
+      snowball.speed_x,snowball.speed_y=dir*2,4
+      psfx(17,5,3)
     end
   end
   return spawner
 end
-snowball_spawner_r = make_spawner(14, 1)
-snowball_spawner_l = make_spawner(15, -1)
+snowball_spawner_r,snowball_spawner_l=make_spawner(14,1),make_spawner(15,-1)
 
+player=new_type(2)
+player.t_jump_grace,
+player.t_var_jump,
+player.var_jump_speed,
+player.grapple_x,
+player.grapple_y,
+player.grapple_dir,
+player.grapple_wave,
+player.t_grapple_cooldown,
+player.wipe_timer,
+player.t_grapple_jump_grace,
+player.t_grapple_pickup=
+0,0,0,0,0,0,0,0,0,0,0
 
-player = new_type(2)
+--[[
 player.t_jump_grace = 0
 player.t_var_jump = 0
 player.var_jump_speed = 0
@@ -1082,6 +1026,7 @@ player.wipe_timer = 0
 player.finished = false
 player.t_grapple_jump_grace = 0
 player.t_grapple_pickup = 0
+--]]
 
 player.state = 0
 
