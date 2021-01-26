@@ -1500,7 +1500,7 @@ function player.update(self)
     -- grapple attached state
     
     -- start boost
-    if (not self.grapple_boost) then
+    if not self.grapple_boost then
       self.grapple_boost = true
       self.speed_x = self.grapple_dir * 8
     end
@@ -1510,12 +1510,8 @@ function player.update(self)
     self.speed_y = approach(self.speed_y, 0, 0.4)
 
     -- y-correction
-    if (self.speed_y == 0) then
-      if (self.y - 3 > self.grapple_y) then
-        self:move_y(-0.5)
-      elseif (self.y - 3 < self.grapple_y) then
-        self:move_y(0.5)
-      end
+    if self.speed_y == 0 then
+      self:move_y(abs(self.grapple_y-self.y+3)*0.5)
     end
 
     -- wall pose
@@ -1525,8 +1521,8 @@ function player.update(self)
     end
 
     -- jumps
-    if (consume_jump_press()) then
-      if (self:check_solid(self.grapple_dir * 2, 0)) then
+    if consume_jump_press() then
+      if self:check_solid(self.grapple_dir * 2, 0) then
         self:wall_jump(-self.grapple_dir)
       else
         self.grapple_jump_grace_y = self.y
@@ -1538,7 +1534,7 @@ function player.update(self)
     self.grapple_wave = approach(self.grapple_wave, 0, 0.6)
 
     -- release
-    if (not input_grapple or (self.grapple_hit and self.grapple_hit.destroyed)) then
+    if not input_grapple or self.grapple_hit and self.grapple_hit.destroyed then
       self.state = 0
       self.t_grapple_jump_grace = 2
       self.grapple_jump_grace_y = self.y
@@ -1554,7 +1550,7 @@ function player.update(self)
     -- release if beyond grapple point
     if sgn(self.x - self.grapple_x) == self.grapple_dir then
       self.state = 0
-      if self.grapple_hit != nil and self.grapple_hit.grapple_mode == 2 then
+      if self.grapple_hit and self.grapple_hit.grapple_mode == 2 then
         self.t_grapple_jump_grace = 3
         self.grapple_jump_grace_y = self.y
       end
@@ -1579,9 +1575,7 @@ function player.update(self)
     end
 
     -- y-correct
-    if obj.y != self.y - 7 then
-      obj:move_y(sgn(self.y - obj.y - 7) * 0.5)
-    end
+    obj:move_y(sgn(self.y - obj.y - 7) * 0.5)
 
     -- grapple wave
     self.grapple_wave = approach(self.grapple_wave, 0, 0.6)
@@ -1596,7 +1590,7 @@ function player.update(self)
     if not input_grapple or abs(obj.y - self.y + 7) > 8 or sgn(obj.x + 4 - self.x) == -self.grapple_dir then
       self.state = 0
       self.grapple_retract = true
-      self:release_holding(obj, -self.grapple_dir * 5, 0, false)
+      self:release_holding(obj, self.grapple_dir * -5, 0)
     end
 
   elseif self.state == 50 then
@@ -1621,7 +1615,7 @@ function player.update(self)
 
     self.wipe_timer += 1
     if self.wipe_timer > 20 then
-      if self.state == 99 then restart_level() else next_level() end
+      (self.state==99 and restart_level or next_level)()
     end
     return
   end
@@ -1639,10 +1633,10 @@ function player.update(self)
   -- sprite
   if self.state == 50 and self.t_grapple_pickup > 0 then
     self.spr = 5
-  elseif (self.state != 11) then
-    if (not on_ground) then
+  elseif self.state != 11 then
+    if not on_ground then
       self.spr = 3
-    elseif (input_x != 0) then
+    elseif input_x != 0 then
       self.spr += 0.25
       self.spr = 2 + self.spr % 2
     else
@@ -1651,7 +1645,7 @@ function player.update(self)
   end
 
   -- object interactions
-  for o in all(objects) do
+  foreach(objects,function(o)
     if o.base == grapple_pickup and self:overlaps(o) then
       --grapple pickup
       o.destroyed = true
@@ -1678,13 +1672,7 @@ function player.update(self)
       end
     elseif o.base == springboard and self.state != 2 and not o.held and self:overlaps(o) and self:bounce_check(o) then
       --springboard
-      self.state = 2
-      self.speed_x = 0
-      self.speed_y = 0
-      self.t_jump_grace = 0
-      self.springboard = o
-      self.remainder_y = 0
-      o.player = self
+      self.state,self.speed_x,self.speed_y,self.t_jump_grace,self.springboard,self.remainder_y,o.player=2,0,0,0,o,0,self
       self:move_y(o.y + 4 - self.y)
     elseif o.base == berry and self:overlaps(o) then
       --berry
@@ -1695,20 +1683,23 @@ function player.update(self)
         o.breaking = true
         psfx(8, 20, 4)
       elseif self.state == 11 then
-        if self:overlaps(o, self.grapple_dir) or self:overlaps(o, self.grapple_dir, 3) or self:overlaps(o, self.grapple_dir, -2) then
-          o.breaking = true
-          psfx(8, 20, 4)
+        for i in all(split"0,3,-2") do
+	        if self:overlaps(o, self.grapple_dir,i) then 
+            o.breaking = true
+            psfx(8, 20, 4)
+            break --can maybe be reomved?
+          end 
         end
       end
     elseif o.base == checkpoint and level_checkpoint != o.id and self:overlaps(o) then
       level_checkpoint = o.id
       psfx(8, 24, 6, 20)
     end
-  end
+  end)
 
   -- death
   if self.state < 99 and (self.y > level.height * 8 + 16 or self:hazard_check()) then
-    if (level_index == 1 and self.x > level.width * 8 - 64) then
+    if level_index == 1 and self.x > level.width * 8 - 64 then
       self.state = 100
       self.wipe_timer = -15
     else
@@ -1718,14 +1709,14 @@ function player.update(self)
   end
 
   -- bounds
-  if (self.y < -16) then
+  if self.y < -16 then
     self.y = -16
     self.speed_y = 0
   end
-  if (self.x < 3) then
+  if self.x < 3 then
     self.x = 3
     self.speed_x = 0
-  elseif (self.x > level.width * 8 - 3) then
+  elseif self.x > level.width * 8 - 3 then
     if level.right_edge then
       self.x = level.width * 8 - 3
       self.speed_x = 0
@@ -1760,22 +1751,19 @@ end
 
 function player.on_collide_x(self, moved, target)
 
-  if self.state == 0 then
-    if sgn(target) == input_x and self:corner_correct(input_x, 0, 2, 2, -1, self.correction_func) then
-      return false
-    end
-  elseif self.state == 11 then
-    if self:corner_correct(self.grapple_dir, 0, 4, 2, 0, self.correction_func) then
-      return false
-    end
-  end
-
-  return object.on_collide_x(self, moved, target)
+  return not(
+     self.state == 0 
+     and sgn(target) == input_x  
+     and self:corner_correct(input_x, 0, 2, 2, -1, self.correction_func) 
+     or self.state == 11  
+     and self:corner_correct(self.grapple_dir, 0, 4, 2, 0, self.correction_func) 
+     )
+     and object.on_collide_x(self, moved, target)
 end
 
 function player.on_collide_y(self, moved, target)
   if target < 0 and self:corner_correct(0, -1, 2, 1, input_x, self.correction_func) then
-    return false
+    return
   end
 
   self.t_var_jump = 0
@@ -1786,12 +1774,12 @@ function player.draw(self)
 
   -- death fx
   if self.state == 99 then
-    local e = self.wipe_timer / 10
+    local e = self.wipe_timer *3.2
     local dx = mid(camera_x, self.x, camera_x + 128)
     local dy = mid(camera_y, self.y - 4, camera_y + 128)
-    if (e <= 1) then
-      for i=0,7 do
-        circfill(dx + cos(i / 8) * 32 * e, dy + sin(i / 8) * 32 * e, (1 - e) * 8, 10)
+    if (e <= 32) then
+      for i=0,0.875,0.125 do
+        circfill(dx + cos(i) * e, dy + sin(i) * e, 8-e/4, 10)
       end
     end
     return
@@ -1804,22 +1792,20 @@ function player.draw(self)
 
     -- approach last pos with an offset
     s.x += (last.x - s.x - self.facing) / 1.5
-    s.y += ((last.y - s.y) + sin(i * 0.25 + time()) * i * 0.25) / 2
+    s.y += (last.y - s.y + sin(i * 0.25 + time()) * i * 0.25) / 2
 
     -- don't let it get too far
     local dx = s.x - last.x
     local dy = s.y - last.y
     local dist = sqrt(dx * dx + dy * dy)
     if (dist > 1.5) then
-      local nx = (s.x - last.x) / dist
-      local ny = (s.y - last.y) / dist
-      s.x = last.x + nx * 1.5
-      s.y = last.y + ny * 1.5
+      s.x = last.x + (s.x - last.x) / dist * 1.5
+      s.y = last.y + (s.y - last.y) / dist * 1.5
     end
 
     -- fill
-    rectfill(s.x, s.y, s.x, s.y, 10)
-    rectfill((s.x + last.x) / 2, (s.y + last.y) / 2, (s.x + last.x) / 2, (s.y + last.y) / 2, 10)
+    pset(s.x, s.y,10)
+    pset((s.x + last.x) / 2, (s.y + last.y) / 2, 10)
     last = s
   end
 
@@ -1839,9 +1825,9 @@ function player.draw(self)
 
   if self.state == 50 and self.t_grapple_pickup > 0 then
     spr(20, self.x - 4, self.y - 18)
-    for i=0,16 do
-      local s = sin(time() * 4 + i/16)
-      local c = cos(time() * 4 + i/16)
+    for i=0,0.9375,0.0625 do
+      local s = sin(time() * 4 + i)
+      local c = cos(time() * 4 + i)
       local ty = self.y - 14
       line(self.x + s * 16, ty + c * 16, self.x + s * 40, ty + c * 40, 7)
     end
