@@ -1,9 +1,6 @@
 pico-8 cartridge // http://www.pico-8.com
 version 29
 __lua__
--- celeste2
--- exok games
-
 level_index,level_intro=0,0
 
 function game_start()
@@ -98,7 +95,7 @@ function _draw()
     end
     sspr(72,32,56,32,36,32)
     rect(0,0,127,127,7)
-    print_center("lANI'S tREK",68,14)
+    print_center("lani's trek",68,14)
     print_center("a game by",80,1)
     print_center("maddy thorson",87,5)
     print_center("noel berry",94,5)
@@ -158,11 +155,11 @@ function _draw()
     rectfill(32,390,96,432,0)
     rect(32,390,96,432,7)
     spr(21,44,396)
-    ?"X "..berry_count,56,398,7
+    ?"x "..berry_count,56,398,7
     spr(72,44,408)
     draw_time(56,408)
     spr(71,44,420)
-    ?"X "..death_count,56,421,7
+    ?"x "..death_count,56,421,7
   end
 
   -- draw objects
@@ -175,7 +172,7 @@ function _draw()
   -- draw snow
   draw_snow()
 
-  -- draw FG clouds
+  -- draw fg clouds
   if level.fogmode then
     if level.fogmode==1 then fillp(0b0101101001011010.1) end
     draw_clouds(1.25,0,level.height*8+1,1,0,7,#clouds-10)
@@ -377,22 +374,22 @@ end
 
 c_offset=0
 camera_modes={
-    -- 1: Intro
+    -- 1: intro
     function (px,py)
       camera_target_x=px<42 and 0 or clamp(px-48,40,level.width*8-128)
     end,
-    -- 2: Intro 2
+    -- 2: intro 2
     function (px,py)
       camera_target_x,camera_target_y=px<120 and 0 or px>136 and 128 or px-64,clamp(py-64,0,level.height*8-128)
     end,
-    -- 3: Level 1
+    -- 3: level 1
     function (px,py)
       camera_target_x,camera_target_y=clamp(px-56,0,level.width*8-128),py<level.camera_barrier_y*8+3 and 0 or level.camera_barrier_y*8
       for i,b in ipairs(level.camera_barriers_x) do
         camera_x_barrier(b,px,py)
       end
     end,
-    -- 4: Level 2
+    -- 4: level 2
     function (px,py)
       if px%128>8 and px%128<120 then
         px=(px\128)*128+64
@@ -402,11 +399,11 @@ camera_modes={
       end
       camera_target_x,camera_target_y=clamp(px-64,0,level.width*8-128),clamp(py-64,0,level.height*8-128)
     end,
-    -- 5: Level 3-1 and 3-3
+    -- 5: level 3-1 and 3-3
     function (px,py)
       camera_target_x=clamp(px-32,0,level.width*8-128)
     end,
-    -- 6: Level 3-2
+    -- 6: level 3-2
     function (px,py)
       if px>848 then
         c_offset=48
@@ -425,12 +422,12 @@ camera_modes={
         camera_target_x=max(camera_target_x,672)
       end
     end,
-    --7: Level 3-3
+    --7: level 3-3
     function (px,py)
       c_offset=px>420 and (px<436 and px-388 or 48) or 32
       camera_target_x=clamp(px-c_offset,0,level.width*8-128)
     end,
-    --8: End
+    --8: end
     function (px,py)
       camera_target_y=clamp(py-32,0,level.height*8-128)
     end
@@ -497,8 +494,7 @@ end
 
 -- gets the tile at the given location from the loaded level
 function tile_at(x,y)
-  if (x<0 or y<0 or x>=level.width or y>=level.height) then return 0 end
-  return peek(0x4300+x+y*level.width)
+  return x<0 or y<0 or x>=level.width or y>=level.height and 0 or peek(0x4300+x+y*level.width)
 end
 
 input_x,input_jump_pressed,input_grapple_pressed,axis_x_value=0,0,0,0
@@ -1007,7 +1003,7 @@ player.t_grapple_pickup,
 player.state=
 0,0,0,0,0,0,0,0,0,0,0,0
 
--- Grapple Functions
+-- grapple functions
 
 --[[
   object grapple modes:
@@ -1055,7 +1051,7 @@ function player.grapple_check(self,x,y)
   return 0
 end
 
--- Helpers
+-- helpers
 
 function player.jump(self)
   consume_jump_press()
@@ -1132,9 +1128,10 @@ function player.grapple_jump(self)
   self.auto_var_jump,
   self.grapple_retract=
   0,0,-3,-3,4,false,true
-  if abs(self.speed_x)>4 then
-    self.speed_x=sgn(self.speed_x)*4
-  end
+  self.speed_x=sgn(self.speed_x)*min(4,abs(self.speed_x))
+  --if abs(self.speed_x)>4 then
+  --  self.speed_x=sgn(self.speed_x)*4
+  --end
   self:move_y(self.grapple_jump_grace_y-self.y)
 end
 
@@ -1145,7 +1142,7 @@ end
 function player.die(self)
   self.state,freeze_time,shake=99,2,5
   death_count+=1
-  psfx(14, 16, 16, 120)
+  psfx(14,16,16,120)
 end
 
 --[[
@@ -1178,7 +1175,7 @@ function player.correction_func(self,ox,oy)
   return not self:hazard_check(ox,oy)
 end
 
--- Grappled Objects
+-- grappled objects
 
 function pull_collide_x(self,moved,target)
   return not self:corner_correct(sgn(target),0,4,2,0)
@@ -1190,7 +1187,7 @@ function player.release_holding(self,obj,x,y,thrown)
   psfx(7,24,6)
 end
 
--- Events
+-- events
 
 function player.init(self)
   self.x+=4
@@ -1225,7 +1222,7 @@ function player.update(self)
   if self.grapple_retract then
     self.grapple_x,self.grapple_y=approach(self.grapple_x,self.x,12),approach(self.grapple_y,self.y-3,6)
     if self.grapple_x==self.x and self.grapple_y==self.y-3 then
-      self.grapple_retract = false
+      self.grapple_retract=false
     end
   end
 
@@ -1322,12 +1319,14 @@ function player.update(self)
     -- grapple movement and hitting stuff
     for i=1,min(64-abs(self.grapple_x-self.x),6) do
       local hit=self:grapple_check(self.grapple_x+self.grapple_dir,self.grapple_y)
-      if hit==0 then
-        hit=self:grapple_check(self.grapple_x+self.grapple_dir,self.grapple_y-1)
+      for i=-1,1,2 do
+        if hit==0 then
+          hit=self:grapple_check(self.grapple_x+self.grapple_dir,self.grapple_y+i)
+        end
       end
-      if hit==0 then
-        hit=self:grapple_check(self.grapple_x+self.grapple_dir,self.grapple_y+1)
-      end
+      --if hit==0 then
+      --  hit=self:grapple_check(self.grapple_x+self.grapple_dir,self.grapple_y+1)
+      --end
 
       local mode=self.grapple_hit and self.grapple_hit.grapple_mode or 0
 
@@ -1408,7 +1407,7 @@ function player.update(self)
       self.grapple_retract=
       0,2,self.y,true
       self.facing*=-1
-      self.speed_x=abs(self.speed_x)>5 and sgn(self.speed_x)*5 or abs(self.speed_x)<=0.5 and 0 or self.speed_x
+      self.speed_x=abs(self.speed_x)<=0.5 and 0 or sgn(self.spd.x)*min(5,abs(self.speed_x))--abs(self.speed_x)>5 and sgn(self.speed_x)*5 or abs(self.speed_x)<=0.5 and 0 or self.speed_x
     end
 
     -- release if beyond grapple point
@@ -1418,7 +1417,7 @@ function player.update(self)
         self.t_grapple_jump_grace,self.grapple_jump_grace_y=3,self.y
       end
       --if abs(self.speed_x)>5 then
-        self.speed_x=sgn(self.speed_x)*min(5,abs(self.speed_x))
+      self.speed_x=sgn(self.speed_x)*min(5,abs(self.speed_x))
       --end
     end
 
@@ -1770,6 +1769,8 @@ function px9_decomp(x0,y0,src,vget,vset)
     end
   end
 end
+-->8
+
 __gfx__
 00000000626666660011110001111110011111000011110000000000000000000000000000000000000000006666666600000000422222220000000000000000
 00000000626666660111111011144411111111100111111000000000000000000000000000000000000000000311113000000000422222220800000000000080
