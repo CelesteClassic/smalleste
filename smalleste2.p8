@@ -56,10 +56,10 @@ function _update()
   -- normal level
   else
     -- timers
-    sfx_timer-=1
-    infade+=1
-    shake-=1
-    if level_index!=8 then
+    sfx_timer=max(sfx_timer-1)
+    infade=min(infade+1,60)
+    shake=max(shake-1)
+    if level_index~=8 then
       frames+=1
       seconds+=frames\30
       minutes+=seconds\60
@@ -111,7 +111,7 @@ function _draw()
     cls(0)
     camera(0,0)
     draw_time(4,4)
-    if level_index!=8 then
+    if level_index~=8 then
       print_center("level "..(level_index-2),56, 7)
     end
     print_center(level.title,64,7)
@@ -147,7 +147,7 @@ function _draw()
     for y=mid(0,camera_y\8,level.height),mid(0,(camera_y+128)\8,level.height) do
       local tile=tile_at(x, y)
       if level.pal and fget(tile,7) then level.pal() end
-      if tile!=0 and fget(tile,0) then spr(tile,x*8,y*8) end
+      if tile~=0 and fget(tile,0) then spr(tile,x*8,y*8) end
       pal() palt()
     end
   end
@@ -461,7 +461,7 @@ function goto_level(index)
   px9_decomp(0,0,0x1000+level.offset,vget,vset)
 
   -- start music
-  if current_music!=level.music and level.music then
+  if current_music~=level.music and level.music then
     current_music=level.music
     music(level.music)
   end
@@ -485,12 +485,9 @@ function restart_level()
 
   for i=0,level.width-1 do
     for j=0,level.height-1 do
-      for t in all(types) do
-        if not level_checkpoint or t!=player then
-          if tile_at(i,j)==t.spr and not collected[id(i,j)] then
-            create(t,i*8,j*8)
-          end
-        end
+      local t=types[tile_at(i,j)]
+      if t and not collected[id(i,j)] and (not level_checkpoint or t~=player) then
+        create(t,i*8,j*8)
       end
     end
   end
@@ -567,7 +564,7 @@ function object.move_x(self,x,on_collide)
   self.remainder_x-=mx
 
   local total,mxs=mx,sgn(mx)
-  while mx!=0
+  while mx~=0
   do
     if self:check_solid(mxs,0) then
       if on_collide then
@@ -588,7 +585,7 @@ function object.move_y(self,y,on_collide)
   
   local total,mys=my,sgn(my)
   local mys=sgn(my)
-  while my!=0
+  while my~=0
   do
     if self:check_solid(0,mys) then
       if on_collide then
@@ -646,7 +643,7 @@ function object.check_solid(self, ox, oy)
     end
   end
   for o in all(objects) do
-    if o.solid and o!=self and not o.destroyed and self:overlaps(o, ox, oy) then
+    if o.solid and o~=self and not o.destroyed and self:overlaps(o, ox, oy) then
       return true
     end
   end
@@ -704,7 +701,7 @@ function new_type(spr)
     spr=spr,
     base=object
   },lookup)
-  add(types, obj)
+  types[spr]=obj--add(types, obj)
   return obj
 end
 
@@ -746,7 +743,7 @@ function snowball.update(self)
         self.stop=false
       end
     else
-      if self.speed_x!=0 then
+      if self.speed_x~=0 then
         self.speed_x=approach(self.speed_x,sgn(self.speed_x)*2,0.1)
       end
     end
@@ -810,7 +807,7 @@ function snowball.hurt(self)
   end
 end
 function snowball.bounce_overlaps(self,o)
-  if self.speed_x!=0 then
+  if self.speed_x~=0 then
     self.hit_w,self.hit_x=12,-2
     local ret=self:overlaps(o)
     self.hit_w=8
@@ -892,9 +889,9 @@ function berry.update(self)
     self.y+=(self.player.y-4-self.y)/8
     self.flash-=1
 
-    if self.player:check_solid(0,1) and self.player.state!=99 then self.ground+=1 else self.ground=0 end
+    if self.player:check_solid(0,1) and self.player.state~=99 then self.ground+=1 else self.ground=0 end
 
-    if self.ground>3 or self.player.x>level.width*8-16 or self.player.last_berry!=self then
+    if self.ground>3 or self.player.x>level.width*8-16 or self.player.last_berry~=self then
       psfx(8,8,8,20)
       collected[self.id]=true
       berry_count+=1
@@ -1031,7 +1028,7 @@ function player.start_grapple(self)
   self.t_grapple_cooldown,
   self.t_var_jump=
   10,0,0,0,0,self.x,self.y-3,0,false,6,0
-  if input_x!=0 then
+  if input_x~=0 then
     self.grapple_dir=input_x
   else
     self.grapple_dir=self.facing
@@ -1048,7 +1045,7 @@ function player.grapple_check(self,x,y)
     return fget(tile,2) and 2 or 1
   end
   for o in all(objects) do
-    if o.grapple_mode!=0 and o:contains(x, y) then
+    if o.grapple_mode~=0 and o:contains(x, y) then
       self.grapple_hit=o
       return 1
     end
@@ -1169,7 +1166,7 @@ player.hazard_table={
 
 function player.hazard_check(self,ox,oy)
   for o in all(objects) do
-    if (o.hazard!=0 and self:overlaps(o,ox or 0,oy or 0) and self.hazard_table[o.hazard](self)) then
+    if o.hazard~=0 and self:overlaps(o,ox or 0,oy or 0) and self.hazard_table[o.hazard](self) then
       return true
     end
   end
@@ -1254,7 +1251,7 @@ function player.update(self)
     self.speed_x=approach(
       self.speed_x,
       input_x*2,
-      abs(self.speed_x)>2 and input_x==sgn(self.speed_x) and 0.1 or on_ground and 0.6 or input_x!=0 and 0.4 or 0.1
+      abs(self.speed_x)>2 and input_x==sgn(self.speed_x) and 0.1 or on_ground and 0.6 or input_x~=0 and 0.4 or 0.1
       )
 
     -- gravity
@@ -1361,220 +1358,199 @@ function player.update(self)
     self.grapple_wave,self.spr=approach(self.grapple_wave,1,0.2),3
 
     -- release
-    if not input_grapple or abs(self.y - self.grapple_y) > 8 then
-      self.state = 0
-      self.grapple_retract = true
+    if not input_grapple or abs(self.y-self.grapple_y)>8 then
+      self.state,self.grapple_retract=0,true
       psfx(-2)
     end
 
-  elseif self.state == 11 then
+  elseif self.state==11 then
     -- grapple attached state
     
     -- start boost
     if not self.grapple_boost then
-      self.grapple_boost = true
-      self.speed_x = self.grapple_dir * 8
+      self.grapple_boost,self.speed_x=true,self.grapple_dir*8
     end
 
     -- acceleration
-    self.speed_x = approach(self.speed_x, self.grapple_dir * 5, 0.25)
-    self.speed_y = approach(self.speed_y, 0, 0.4)
+    self.speed_x,self.speed_y=approach(self.speed_x,self.grapple_dir*5,0.25),approach(self.speed_y,0,0.4)
 
     -- y-correction
-    if self.speed_y == 0 and self.y-3 != self.grapple_y then
+    if self.speed_y==0 and self.y-3~=self.grapple_y then
       self:move_y(sgn(self.grapple_y-self.y+3)*0.5)
     end
 
     -- wall pose
-    if self.spr != 4 and self:check_solid(self.grapple_dir, 0) then
-      self.spr = 4
-      psfx(14, 8, 3)
+    if self.spr~=4 and self:check_solid(self.grapple_dir,0) then
+      self.spr=4
+      psfx(14,8,3)
     end
 
     -- jumps
     if consume_jump_press() then
-      if self:check_solid(self.grapple_dir * 2, 0) then
+      if self:check_solid(self.grapple_dir*2,0) then
         self:wall_jump(-self.grapple_dir)
       else
-        self.grapple_jump_grace_y = self.y
+        self.grapple_jump_grace_y=self.y
         self:grapple_jump()
       end
     end
 
     -- grapple wave
-    self.grapple_wave = approach(self.grapple_wave, 0, 0.6)
+    self.grapple_wave=approach(self.grapple_wave,0,0.6)
 
     -- release
-    if not input_grapple or self.grapple_hit and self.grapple_hit.destroyed then
-      self.state = 0
-      self.t_grapple_jump_grace = 2
-      self.grapple_jump_grace_y = self.y
-      self.grapple_retract = true
-      self.facing *= -1
-      if abs(self.speed_x) > 5 then
-        self.speed_x = sgn(self.speed_x) * 5
-      elseif abs(self.speed_x) <= 0.5 then
-        self.speed_x = 0
-      end
+    if self.grapple_hit and self.grapple_hit.destroyed or not input_grapple then
+      self.state,
+      self.t_grapple_jump_grace,
+      self.grapple_jump_grace_y,
+      self.grapple_retract=
+      0,2,self.y,true
+      self.facing*=-1
+      self.speed_x=abs(self.speed_x)>5 and sgn(self.speed_x)*5 or abs(self.speed_x)<=0.5 and 0 or self.speed_x
     end
 
     -- release if beyond grapple point
-    if sgn(self.x - self.grapple_x) == self.grapple_dir then
-      self.state = 0
-      if self.grapple_hit and self.grapple_hit.grapple_mode == 2 then
-        self.t_grapple_jump_grace = 3
-        self.grapple_jump_grace_y = self.y
+    if sgn(self.x-self.grapple_x)==self.grapple_dir then
+      self.state=0
+      if self.grapple_hit and self.grapple_hit.grapple_mode==2 then
+        self.t_grapple_jump_grace,self.grapple_jump_grace_y=3,self.y
       end
-      if abs(self.speed_x) > 5 then
-        self.speed_x = sgn(self.speed_x) * 5
-      end
+      --if abs(self.speed_x)>5 then
+        self.speed_x=sgn(self.speed_x)*min(5,abs(self.speed_x))
+      --end
     end
 
-  elseif self.state == 12 then
+  elseif self.state==12 then
     -- grapple pull state
-    local obj = self.grapple_hit
+    local obj=self.grapple_hit
 
     -- pull
-    if obj:move_x(-self.grapple_dir * 6, pull_collide_x) then
-      self.state = 0
-      self.grapple_retract = true
-      obj:on_release(-self.grapple_dir)
-      obj.held = false
+    if obj:move_x(-self.grapple_dir*6,pull_collide_x) then
+      self.state,self.grapple_retract,obj.held=0,true,false
       return
     else
-      self.grapple_x = approach(self.grapple_x, self.x, 6)
+      self.grapple_x=approach(self.grapple_x,self.x,6)
     end
 
     -- y-correct
-    if self.y!=obj.y+7 then 
-      obj:move_y(sgn(self.y - obj.y - 7) * 0.5)
-    end 
+    if obj.y~=self.y-7 then
+      obj:move_y(sgn(self.y-obj.y-7)*0.5)
+    end
 
     -- grapple wave
-    self.grapple_wave = approach(self.grapple_wave, 0, 0.6)
+    self.grapple_wave=approach(self.grapple_wave,0,0.6)
 
     -- hold
     if self:overlaps(obj) then
-      self.state = 1
-      psfx(7, 16, 6)
+      self.state=1
+      psfx(7,16,6)
     end
 
     -- release
-    if not input_grapple or abs(obj.y - self.y + 7) > 8 or sgn(obj.x + 4 - self.x) == -self.grapple_dir then
-      self.state = 0
-      self.grapple_retract = true
-      self:release_holding(obj, self.grapple_dir * -5, 0)
+    if not input_grapple or abs(obj.y-self.y+7)>8 or sgn(obj.x+4-self.x)==-self.grapple_dir then
+      self.state,self.grapple_retract=0,true
+      self:release_holding(obj,-self.grapple_dir*5,0)--,false)
     end
 
-  elseif self.state == 50 then
+  elseif self.state==50 then
     -- grapple pickup state
-    self.speed_y = min(self.speed_y + 0.8, 4.5)
-    self.speed_x = approach(self.speed_x, 0, 0.2)
+    self.speed_y,self.speed_x=min(self.speed_y+0.8,4.5),approach(self.speed_x,0,0.2)
+
     if on_ground then
-      if self.t_grapple_pickup == 0 then music(39) end
-      if self.t_grapple_pickup == 61 then music(-1) end
-      if self.t_grapple_pickup == 70 then music(22) end
-      if self.t_grapple_pickup > 80 then self.state = 0 end
-      self.t_grapple_pickup += 1
+      if self.t_grapple_pickup==0 then music(39) end
+      if self.t_grapple_pickup==61 then music(-1) end
+      if self.t_grapple_pickup==70 then music(22) end
+      if self.t_grapple_pickup>80 then self.state=0 end
+      self.t_grapple_pickup+=1
     end
 
-  elseif self.state == 99 or self.state == 100 then
+  elseif self.state==99 or self.state==100 then
     -- dead / finished state
 
-    if self.state == 100 then
-      self.x += 1
-      if self.wipe_timer == 5 and level_index > 1 then psfx(17, 24, 9) end
+    if self.state==100 then
+      self.x+=1
+      if self.wipe_timer==5 and level_index>1 then psfx(17,24,9) end
     end
 
-    self.wipe_timer += 1
-    if self.wipe_timer > 20 then
-      (self.state==99 and restart_level or next_level)()
+    self.wipe_timer+=1
+    if self.wipe_timer>20 then
+      if self.state==99 then restart_level() else next_level() end
     end
     return
   end
 
   -- apply
-  self:move_x(self.speed_x, self.on_collide_x)
-  self:move_y(self.speed_y, self.on_collide_y)
+  self:move_x(self.speed_x,self.on_collide_x)
+  self:move_y(self.speed_y,self.on_collide_y)
 
   -- holding
-  if (self.holding) then
-    self.holding.x = self.x - 4
-    self.holding.y = self.y - 14
+  if self.holding then
+    self.holding.x,self.holding.y=self.x-4,self.y-14
   end
 
   -- sprite
-  if self.state == 50 and self.t_grapple_pickup > 0 then
-    self.spr = 5
-  elseif self.state != 11 then
-    if not on_ground then
-      self.spr = 3
-    elseif input_x != 0 then
-      self.spr += 0.25
-      self.spr = 2 + self.spr % 2
-    else
-      self.spr = 2
-    end
+  if self.state==50 and self.t_grapple_pickup>0 then
+    self.spr=5
+  elseif self.state~=11 then
+    self.spr=not on_ground and 3 or input_x~=0 and 2+(self.spr+0.25)%2 or 2
   end
 
   -- object interactions
-  foreach(objects,function(o)
-    if o.base == grapple_pickup and self:overlaps(o) then
+  for o in all(objects) do
+    if o.base==grapple_pickup and self:overlaps(o) then
       --grapple pickup
-      o.destroyed = true
-      have_grapple = true
-      psfx(7, 12, 4)
-      self.state = 50
-    elseif o.base == bridge and not o.falling and self:overlaps(o) then
+      o.destroyed,have_grapple,self.state=true,true,50
+      psfx(7,12,4)
+    elseif o.base==bridge and not o.falling and self:overlaps(o) then
       --falling bridge tile
-      o.falling = true
-      self.freeze = 1
-      shake = 2
-      psfx(8, 16, 4)
-    elseif o.base == snowball and not o.held then
+      o.falling,self.freeze,shake=true,1,2
+      psfx(8,16,4)
+    elseif o.base==snowball and not o.held then
       --snowball
       if self:bounce_check(o) and o:bounce_overlaps(self) then
-        self:bounce(o.x + 4, o.y)
-        psfx(17, 0, 2)
-        o.freeze = 1
-        o.speed_y = -1
+        self:bounce(o.x+4,o.y)
+        psfx(17,0,2)
+        o.freeze,o.speed_y=1,-1
         o:hurt()
-      elseif o.speed_x != 0 and o.thrown_timer <= 0 and self:overlaps(o) then
+      elseif o.speed_x~=0 and o.thrown_timer<=0 and self:overlaps(o) then
         self:die()
         return
       end
-    elseif o.base == springboard and self.state != 2 and not o.held and self:overlaps(o) and self:bounce_check(o) then
+    elseif o.base==springboard and self.state~=2 and not o.held and self:overlaps(o) and self:bounce_check(o) then
       --springboard
-      self.state,self.speed_x,self.speed_y,self.t_jump_grace,self.springboard,self.remainder_y,o.player=2,0,0,0,o,0,self
-      self:move_y(o.y + 4 - self.y)
-    elseif o.base == berry and self:overlaps(o) then
+      self.state,
+      self.speed_x,
+      self.speed_y,
+      self.t_jump_grace,
+      self.springboard,
+      self.remainder_y,
+      o.player=
+      2,0,0,0,o,0,self
+      self:move_y(o.y+4-self.y)
+    elseif o.base==berry and self:overlaps(o) then
       --berry
       o:collect(self)
-    elseif o.base == crumble and not o.breaking then
+    elseif o.base==crumble and not o.breaking then
       --crumble
-      if self.state == 0 and self:overlaps(o, 0, 1) then
-        o.breaking = true
-        psfx(8, 20, 4)
-      elseif self.state == 11 then
-        for i in all(split"0,3,-2") do
-	        if self:overlaps(o, self.grapple_dir,i) then 
-            o.breaking = true
-            psfx(8, 20, 4)
-            break --can maybe be reomved?
-          end 
+      if self.state==0 and self:overlaps(o,0,1) then
+        o.breaking=true
+        psfx(8,20,4)
+      elseif self.state==11 then
+        if self:overlaps(o,self.grapple_dir) or self:overlaps(o,self.grapple_dir,3) or self:overlaps(o,self.grapple_dir,-2) then
+          o.breaking=true
+          psfx(8,20,4)
         end
       end
-    elseif o.base == checkpoint and level_checkpoint != o.id and self:overlaps(o) then
-      level_checkpoint = o.id
-      psfx(8, 24, 6, 20)
+    elseif o.base==checkpoint and level_checkpoint~=o.id and self:overlaps(o) then
+      level_checkpoint=o.id
+      psfx(8,24,6,20)
     end
-  end)
+  end
 
   -- death
-  if self.state < 99 and (self.y > level.height * 8 + 16 or self:hazard_check()) then
-    if level_index == 1 and self.x > level.width * 8 - 64 then
-      self.state = 100
-      self.wipe_timer = -15
+  if self.state<99 and (self.y>level.height*8+16 or self:hazard_check()) then
+    if level_index==1 and self.x>level.width*8-64 then
+      self.state,self.wipe_timer=100,-15
     else
       self:die()
     end
@@ -1582,127 +1558,113 @@ function player.update(self)
   end
 
   -- bounds
-  if self.y < -16 then
-    self.y = -16
-    self.speed_y = 0
+  if self.y<-16 then
+    self.y,self.speed_y=-16,0
   end
-  if self.x < 3 then
-    self.x = 3
-    self.speed_x = 0
-  elseif self.x > level.width * 8 - 3 then
+  if self.x<3 then
+    self.x,self.speed_x=3,0
+  elseif self.x>level.width*8-3 then
     if level.right_edge then
-      self.x = level.width * 8 - 3
-      self.speed_x = 0
+      self.x,self.speed_x=level.width*8-3,0
     else
-      self.state = 100
+      self.state=100
     end
   end
 
   -- intro bridge music
-  if current_music == levels[1].music and self.x > 61 * 8 then
-    current_music = 37
+  if current_music==levels[1].music and self.x>61*8 then
+    current_music=37
     music(37)
-    psfx(17, 24, 9)
+    psfx(17,24,9)
   end
 
   -- ending music
-  if level_index == 8 then
-    if current_music != 40 and self.y > 40 then
-      current_music = 40
+  if level_index==8 then
+    if current_music~=40 and self.y>40 then
+      current_music=40
       music(40)
     end
-    if self.y > 376 then show_score += 1 end
-    if show_score == 120 then music(38) end
+    if self.y>376 then show_score+=1 end
+    if show_score==120 then music(38) end
   end
 
   -- camera
-  camera_modes[level.camera_mode](self.x, self.y, on_ground)
-  camera_x = approach(camera_x, camera_target_x, 5)
-  camera_y = approach(camera_y, camera_target_y, 5)
-  camera(camera_x, camera_y)
+  camera_modes[level.camera_mode](self.x,self.y,on_ground)
+  camera_x,camera_y=approach(camera_x,camera_target_x,5),approach(camera_y,camera_target_y,5)
+  camera(camera_x,camera_y)
 end
 
 function player.on_collide_x(self, moved, target)
-
-  return not(
-     self.state == 0 
-     and sgn(target) == input_x  
-     and self:corner_correct(input_x, 0, 2, 2, -1, self.correction_func) 
-     or self.state == 11  
-     and self:corner_correct(self.grapple_dir, 0, 4, 2, 0, self.correction_func) 
-     )
-     and object.on_collide_x(self, moved, target)
+  if (self.state==0 and sgn(target)==input_x and self:corner_correct(input_x,0,2,2,-1,self.correction_func)) or
+    (self.state==11 and self:corner_correct(self.grapple_dir,0,4,2,0,self.correction_func)) then
+    return
+  end
+  return object.on_collide_x(self,moved,target)
 end
 
 function player.on_collide_y(self, moved, target)
-  if target < 0 and self:corner_correct(0, -1, 2, 1, input_x, self.correction_func) then
+  if target<0 and self:corner_correct(0,-1,2,1,input_x,self.correction_func) then
     return
   end
-
-  self.t_var_jump = 0
-  return object.on_collide_y(self, moved, target)
+  self.t_var_jump=0
+  return object.on_collide_y(self,moved,target)
 end
 
 function player.draw(self)
 
   -- death fx
-  if self.state == 99 then
-    local e = self.wipe_timer *3.2
-    local dx = mid(camera_x, self.x, camera_x + 128)
-    local dy = mid(camera_y, self.y - 4, camera_y + 128)
-    if (e <= 32) then
-      for i=0,0.875,0.125 do
-        circfill(dx + cos(i) * e, dy + sin(i) * e, 8-e/4, 10)
+  if self.state==99 then
+    local e,dx,dy=self.wipe_timer/10,mid(camera_x,self.x,camera_x+128),mid(camera_y,self.y-4,camera_y+128)
+    if e<=1 then
+      for i=0,7 do
+        circfill(dx+cos(i/8)*32*e,dy+sin(i/8)*32*e,(1-e)*8,10)
       end
     end
     return
   end
 
   -- scarf
-  local last = { x = self.x - self.facing,y = self.y - 3 }
+  local last={x=self.x-self.facing,y=self.y-3}
   for i=1,#self.scarf do
-    local s = self.scarf[i]
+    local s=self.scarf[i]
 
     -- approach last pos with an offset
-    s.x += (last.x - s.x - self.facing) / 1.5
-    s.y += (last.y - s.y + sin(i * 0.25 + time()) * i * 0.25) / 2
+    s.x+=(last.x-s.x-self.facing)/1.5
+    s.y+=(last.y-s.y+sin(i*0.25+time())*i*0.25)/2
 
     -- don't let it get too far
-    local dx = s.x - last.x
-    local dy = s.y - last.y
-    local dist = sqrt(dx * dx + dy * dy)
-    if (dist > 1.5) then
-      s.x = last.x + (s.x - last.x) / dist * 1.5
-      s.y = last.y + (s.y - last.y) / dist * 1.5
+    local dx,dy=s.x-last.x,s.y-last.y
+    local dist=sqrt(dx*dx+dy*dy)
+    if dist>1.5 then
+      s.x,s.y=last.x+dx/dist*1.5,last.y+dy/dist*1.5
     end
 
     -- fill
-    pset(s.x, s.y,10)
-    pset((s.x + last.x) / 2, (s.y + last.y) / 2, 10)
-    last = s
+    rectfill(s.x,s.y,s.x,s.y,10)
+    rectfill((s.x+last.x)/2,(s.y+last.y)/2,(s.x+last.x)/2,(s.y+last.y)/2,10)
+    last=s
   end
 
   -- grapple
-  if self.state >= 10 and self.state <= 12 then
-    draw_sine_h(self.x, self.grapple_x, self.y - 3, 7, 2 * self.grapple_wave, 6, 0.08, 6)
+  if self.state>=10 and self.state<=12 then
+    draw_sine_h(self.x,self.grapple_x,self.y-3,7,2*self.grapple_wave,6,0.08,6)
   end
 
   -- retracting grapple
   if self.grapple_retract then
-    line(self.x, self.y - 2, self.grapple_x, self.grapple_y + 1, 1)
-    line(self.x, self.y - 3, self.grapple_x, self.grapple_y, 7)
+    line(self.x,self.y-2,self.grapple_x,self.grapple_y+1,1)
+    line(self.x,self.y-3,self.grapple_x,self.grapple_y,7)
   end
 
   -- sprite
-  spr(self.spr, self.x - 4, self.y - 8, 1, 1, self.facing ~= 1)
+  spr(self.spr,self.x-4,self.y-8,1,1,self.facing~=1)
 
-  if self.state == 50 and self.t_grapple_pickup > 0 then
-    spr(20, self.x - 4, self.y - 18)
-    for i=0,0.9375,0.0625 do
-      local s = sin(time() * 4 + i)
-      local c = cos(time() * 4 + i)
-      local ty = self.y - 14
-      line(self.x + s * 16, ty + c * 16, self.x + s * 40, ty + c * 40, 7)
+  if self.state==50 and self.t_grapple_pickup>0 then
+    spr(20,self.x-4,self.y-18)
+    for i=0,1,0.0625 do
+      local a=time()*4+i
+      local s,c,ty=sin(a),cos(a),self.y-14
+      line(self.x+s*16,ty+c*16,self.x+s*40,ty+c*40,7)
     end
   end
 end
@@ -1716,116 +1678,96 @@ end
 -- vget  read function (x,y)
 -- vset  write function (x,y,v)
 
-function
-    px9_decomp(x0,y0,src,vget,vset)
-
-    local function vlist_val(l, val)
-        -- find position
-        for i=1,#l do
-            if l[i]==val then
-                for j=i,2,-1 do
-                    l[j]=l[j-1]
-                end
-                l[1] = val
-                return i
-            end
+function px9_decomp(x0,y0,src,vget,vset)
+  local function vlist_val(l, val)
+    -- find position
+    for i=1,#l do
+      if l[i]==val then
+        for j=i,2,-1 do
+          l[j]=l[j-1]
         end
+        l[1]=val
+        return i
+      end
     end
+  end
+  -- bit cache is between 16 and 
+  -- 31 bits long with the next
+  -- bit always aligned to the
+  -- lsb of the fractional part
+  local cache,cache_bits=0,0
+  function getval(bits)
+    if cache_bits<16 then
+      -- cache next 16 bits
+      cache+=%src>>>16-cache_bits
+      cache_bits+=16
+      src+=2
+    end
+    -- clip out the bits we want
+    -- and shift to integer bits
+    local val=cache<<32-bits>>>16-bits
+    -- now shift those bits out
+    -- of the cache
+    cache=cache>>>bits
+    cache_bits-=bits
+    return val
+  end
+  -- get number plus n
+  function gnp(n)
+    local bits=0
+    repeat
+      bits+=1
+      local vv=getval(bits)
+      n+=vv
+    until vv<(1<<bits)-1
+    return n
+  end
+  -- header
+  local w,h_1,
+    eb,el,pr,
+    x,y,
+    splen,
+    predict=
+    gnp"1",gnp"0",
+    gnp"1",{},{},
+    0,0,
+    0
+    --,nil
 
-    -- bit cache is between 16 and 
-    -- 31 bits long with the next
-    -- bit always aligned to the
-    -- lsb of the fractional part
-    local cache,cache_bits=0,0
-    function getval(bits)
-        if cache_bits<16 then
-            -- cache next 16 bits
-            cache+=%src>>>16-cache_bits
-            cache_bits+=16
-            src+=2
+  for i=1,gnp"1" do
+    add(el,getval(eb))
+  end
+  for y=y0,y0+h_1 do
+    for x=x0,x0+w-1 do
+      splen-=1
+      if splen<1 then
+        splen,predict=gnp"1",not predict
+      end
+      local a=y>y0 and vget(x,y-1) or 0
+      -- create vlist if needed
+      local l=pr[a]
+      if not l then
+        l={}
+        for e in all(el) do
+          add(l,e)
         end
-        -- clip out the bits we want
-        -- and shift to integer bits
-        local val=cache<<32-bits>>>16-bits
-        -- now shift those bits out
-        -- of the cache
-        cache=cache>>>bits
-        cache_bits-=bits
-        return val
+        pr[a]=l
+      end
+      -- grab index from stream
+      -- iff predicted, always 1
+      local v=l[predict and 1 or gnp"2"]
+      -- update predictions
+      vlist_val(l,v)
+      vlist_val(el,v)
+      -- set
+      vset(x,y,v)
+      -- advance
+      x+=1
+      y+=x\w
+      x%=w
     end
-
-    -- get number plus n
-    function gnp(n)
-        local bits=0
-        repeat
-            bits+=1
-            local vv=getval(bits)
-            n+=vv
-        until vv<(1<<bits)-1
-        return n
-    end
-
-    -- header
-
-    local 
-        w,h_1,      -- w,h-1
-        eb,el,pr,
-        x,y,
-        splen,
-        predict
-        =
-        gnp"1",gnp"0",
-        gnp"1",{},{},
-        0,0,
-        0
-        --,nil
-
-    for i=1,gnp"1" do
-        add(el,getval(eb))
-    end
-    for y=y0,y0+h_1 do
-        for x=x0,x0+w-1 do
-            splen-=1
-
-            if(splen<1) then
-                splen,predict=gnp"1",not predict
-            end
-
-            local a=y>y0 and vget(x,y-1) or 0
-
-            -- create vlist if needed
-            local l=pr[a]
-            if not l then
-                l={}
-                for e in all(el) do
-                    add(l,e)
-                end
-                pr[a]=l
-            end
-
-            -- grab index from stream
-            -- iff predicted, always 1
-
-            local v=l[predict and 1 or gnp"2"]
-
-            -- update predictions
-            vlist_val(l, v)
-            vlist_val(el, v)
-
-            -- set
-            vset(x,y,v)
-
-            -- advance
-            x+=1
-            y+=x\w
-            x%=w
-        end
-    end
+  end
 end
-
-
-
-
 __gfx__
 00000000626666660011110001111110011111000011110000000000000000000000000000000000000000006666666600000000422222220000000000000000
 00000000626666660111111011144411111111100111111000000000000000000000000000000000000000000311113000000000422222220800000000000080
