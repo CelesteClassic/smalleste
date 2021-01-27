@@ -1407,7 +1407,7 @@ function player.update(self)
       self.grapple_retract=
       0,2,self.y,true
       self.facing*=-1
-      self.speed_x=abs(self.speed_x)<=0.5 and 0 or sgn(self.spd.x)*min(5,abs(self.speed_x))--abs(self.speed_x)>5 and sgn(self.speed_x)*5 or abs(self.speed_x)<=0.5 and 0 or self.speed_x
+      self.speed_x=abs(self.speed_x)<=0.5 and 0 or sgn(self.speed_x)*min(5,abs(self.speed_x))
     end
 
     -- release if beyond grapple point
@@ -1769,8 +1769,6 @@ function px9_decomp(x0,y0,src,vget,vset)
     end
   end
 end
--->8
-
 __gfx__
 00000000626666660011110001111110011111000011110000000000000000000000000000000000000000006666666600000000422222220000000000000000
 00000000626666660111111011144411111111100111111000000000000000000000000000000000000000000311113000000000422222220800000000000080
