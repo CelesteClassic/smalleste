@@ -182,7 +182,7 @@ function _draw()
     fillp()
   end
 
-		camera()
+  camera()
 
   -- screen wipes
   -- very similar functions ... can they be compressed into one?
