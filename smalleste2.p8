@@ -108,8 +108,8 @@ function _draw()
   end
 
   if level_intro>0 then
-    cls(0)
-    camera(0,0)
+    cls()
+    camera()
     draw_time(4,4)
     if level_index~=8 then
       print_center("level "..(level_index-2),56, 7)
@@ -182,23 +182,25 @@ function _draw()
     fillp()
   end
 
+  camera()
+
   -- screen wipes
   -- very similar functions ... can they be compressed into one?
   if p and p.wipe_timer>5 then
     for i=0,127 do
-      rectfill(camera_x,camera_y+i,camera_x+191*(p.wipe_timer-5)/12-32+sin(i*0.2)*16+(127-i)*0.25,camera_y+i,0)
+      rectfill(0,i,191*(p.wipe_timer-5)/12-32+sin(i*0.2)*16+(127-i)*0.25,i,0)
     end
   end
 
   if infade<15 then
     for i=0,127 do
-      rectfill(camera_x+191*infade/12-32+sin(i*0.2)*16+(127-i)*0.25,camera_y+i,camera_x+128,camera_y+i,0)
+      rectfill(191*infade/12-32+sin(i*0.2)*16+(127-i)*0.25,i,128,i,0)
     end
   end
 
   -- game timer
   if infade<45 then
-    draw_time(camera_x+4,camera_y+4)
+    draw_time(4,4)
   end
 
   camera(camera_x,camera_y)
