@@ -125,7 +125,7 @@ function _draw()
   end
 
   -- clear screen
-  cls(level and level.bg and level.bg or 0)
+  cls(level and level.bg or 0)
 
   -- draw clouds
   draw_clouds(1,0,0,1,1,level.clouds or 13,#clouds)
@@ -345,7 +345,7 @@ levels={
     camera_mode=7,
     music=2,
     pal=function() pal(2,12) pal(5,2) end,
-    bg=3,
+    bg=13,
     clouds=7,
     fogmode=2,
   },
@@ -1381,8 +1381,8 @@ function player.update(self)
     self.speed_y = approach(self.speed_y, 0, 0.4)
 
     -- y-correction
-    if self.speed_y == 0 then
-      self:move_y(abs(self.grapple_y-self.y+3)*0.5)
+    if self.speed_y == 0 and self.y-3 != self.grapple_y then
+      self:move_y(sgn(self.grapple_y-self.y+3)*0.5)
     end
 
     -- wall pose
@@ -1446,7 +1446,9 @@ function player.update(self)
     end
 
     -- y-correct
-    obj:move_y(sgn(self.y - obj.y - 7) * 0.5)
+    if self.y!=obj.y+7 then 
+      obj:move_y(sgn(self.y - obj.y - 7) * 0.5)
+    end 
 
     -- grapple wave
     self.grapple_wave = approach(self.grapple_wave, 0, 0.6)
