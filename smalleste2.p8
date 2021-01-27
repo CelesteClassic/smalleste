@@ -188,7 +188,7 @@ function _draw()
   -- very similar functions ... can they be compressed into one?
   if p and p.wipe_timer>5 then
     for i=0,127 do
-      rectfill(0,i,91*(p.wipe_timer-5)/12-32+sin(i*0.2)*16+(127-i)*0.25,i,0)
+      rectfill(0,i,191*(p.wipe_timer-5)/12-32+sin(i*0.2)*16+(127-i)*0.25,i,0)
     end
   end
 
