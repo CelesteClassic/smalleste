@@ -1128,7 +1128,7 @@ function player.grapple_jump(self)
   self.auto_var_jump,
   self.grapple_retract=
   0,0,-3,-3,4,false,true
-  self.speed_x=sgn(self.speed_x)*min(4,abs(self.speed_x))
+  self.speed_x=mid(-4,self.speed_x,4)--sgn(self.speed_x)*min(4,abs(self.speed_x))
   --if abs(self.speed_x)>4 then
   --  self.speed_x=sgn(self.speed_x)*4
   --end
@@ -1407,7 +1407,7 @@ function player.update(self)
       self.grapple_retract=
       0,2,self.y,true
       self.facing*=-1
-      self.speed_x=abs(self.speed_x)<=0.5 and 0 or sgn(self.speed_x)*min(5,abs(self.speed_x))
+      self.speed_x=abs(self.speed_x)<=0.5 and 0 or mid(-5,self.speed_x,5)--sgn(self.spd.x)*min(5,abs(self.speed_x))--abs(self.speed_x)>5 and sgn(self.speed_x)*5 or abs(self.speed_x)<=0.5 and 0 or self.speed_x
     end
 
     -- release if beyond grapple point
