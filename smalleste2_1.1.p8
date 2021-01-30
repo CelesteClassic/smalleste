@@ -892,7 +892,7 @@ function berry.update(self)
 
     if self.player:check_solid(0,1) and self.player.state~=99 then self.ground+=1 else self.ground=0 end
 
-    if self.ground>3 or self.player.x>level.width*8-16 or self.player.last_berry~=self then
+    if self.ground>3 or self.player.x>level.width*8-7 or self.player.last_berry~=self then
       psfx(8,8,8,20)
       collected[self.id]=true
       berry_count+=1
@@ -1341,10 +1341,6 @@ function player.update(self)
           self.grapple_x,self.grapple_y=self.grapple_hit.x+4,self.grapple_hit.y+4
         elseif mode==3 then
           self.grapple_hit.held=true
-        end
-
-        if self.grapple_hit and self.grapple_hit.on_grappled then
-          self.grapple_hit:on_grappled()
           grabbed=true
         end
 
