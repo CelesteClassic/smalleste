@@ -204,9 +204,8 @@ function _draw()
 end
 
 function draw_time(x,y)
-  local m,h=minutes%60,minutes\60
   rectfill(x,y,x+32,y+6,0)
-  ?two_digit_str(h)..":"..two_digit_str(m)..":"..two_digit_str(seconds),x+1,y+1,7
+  ?two_digit_str(minutes\60)..":"..two_digit_str(minutes%60)..":"..two_digit_str(seconds),x+1,y+1,7
 end
 
 function two_digit_str(x)
@@ -500,7 +499,7 @@ end
 input_x,input_jump_pressed,input_grapple_pressed,axis_x_value=0,0,0,0
 
 function update_input()
-    -- axes
+  -- axes
   local prev_x=axis_x_value
   if btn(0) then
     if btn(1) then
@@ -512,10 +511,9 @@ function update_input()
     else
       axis_x_turned,axis_x_value,input_x=false,-1,-1
     end
-  elseif btn(1) then
-    axis_x_turned,axis_x_value,input_x=false,1,1
   else
-    axis_x_turned,axis_x_value,input_x=false,0,0
+    local b=btn(1) and 1 or 0
+    axis_x_turned,axis_x_value,input_x=false,b,b
   end
   -- input_jump
   local jump=btn(4)
@@ -774,10 +772,6 @@ function snowball.on_collide_x(self,moved,total)
   return true
 end
 function snowball.on_collide_y(self,moved,total)
-  if self.speed_y<0 then
-    self.speed_y,self.remainder_y=0,0
-    return true
-  end
   if self.speed_y>=4 then
     self.speed_y=-2
     psfx(17,0,2)
@@ -808,12 +802,10 @@ function snowball.bounce_overlaps(self,o)
   if self.speed_x~=0 then
     self.hit_w,self.hit_x=12,-2
     local ret=self:overlaps(o)
-    self.hit_w=8
-    self.hit_x=0
+    self.hit_w,self.hit_x=8,0
     return ret
-  else
-    return self:overlaps(o)
   end
+  return self:overlaps(o)
 end
 function snowball.draw(self)
   pal(7,1)
@@ -1338,7 +1330,6 @@ function player.update(self)
         elseif mode==3 then
           self.grapple_hit.held=true
         end
-
         self.state,self.grapple_wave,self.grapple_boost,self.freeze=mode == 3 and 12 or 11,2,false,2
         psfx(14,0,5)
         break
@@ -1611,10 +1602,10 @@ function player.draw(self)
 
   -- death fx
   if self.state==99 then
-    local e,dx,dy=self.wipe_timer/10,mid(camera_x,self.x,camera_x+128),mid(camera_y,self.y-4,camera_y+128)
+    local e=self.wipe_timer/10
     if e<=1 then
       for i=0,7 do
-        circfill(dx+cos(i/8)*32*e,dy+sin(i/8)*32*e,(1-e)*8,10)
+        circfill(mid(camera_x,self.x,camera_x+128)+cos(i/8)*32*e,mid(camera_y,self.y-4,camera_y+128)+sin(i/8)*32*e,(1-e)*8,10)
       end
     end
     return
@@ -1722,12 +1713,10 @@ function px9_decomp(x0,y0,src,vget,vset)
   -- header
   local w,h_1,
     eb,el,pr,
-    x,y,
     splen,
     predict=
     gnp"1",gnp"0",
     gnp"1",{},{},
-    0,0,
     0
     --,nil
 
