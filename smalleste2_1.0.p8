@@ -1339,10 +1339,6 @@ function player.update(self)
           self.grapple_hit.held=true
         end
 
-        if self.grapple_hit and self.grapple_hit.on_grappled then
-          self.grapple_hit:on_grappled()
-        end
-
         self.state,self.grapple_wave,self.grapple_boost,self.freeze=mode == 3 and 12 or 11,2,false,2
         psfx(14,0,5)
         break
