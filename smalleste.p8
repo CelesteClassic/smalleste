@@ -964,10 +964,15 @@ function kill_player(obj)
       dy=cos(dir)*3
     })
   end
+  --restart_room()
   delay_restart=15
 end
 
 -- [room functions]
+
+--function restart_room()
+--  delay_restart=15
+--end
 
 function next_room()
   local level=level_index()
