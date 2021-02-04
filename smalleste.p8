@@ -153,7 +153,7 @@ player={
       local deccel=0.15
     
       -- set x speed
-      this.spd.x=abs(this.spd.x)<=1 and 
+      this.spd.x=abs(this.spd.x)<=maxrun and 
         appr(this.spd.x,h_input*maxrun,accel) or 
         appr(this.spd.x,sign(this.spd.x)*maxrun,deccel)
       
