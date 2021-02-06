@@ -244,10 +244,6 @@ function approach(x,target,max_delta)
   return x<target and min(x+max_delta,target) or max(x-max_delta,target)
 end
 
-function clamp(val,low,high)
-  return max(low,min(high,val))
-end
-
 function psfx(id,off,len,lock)
   if sfx_timer<=0 or lock then
     sfx(id,3,off,len)
@@ -375,15 +371,15 @@ c_offset=0
 camera_modes={
     -- 1: intro
     function (px,py)
-      camera_target_x=px<42 and 0 or clamp(px-48,40,level.width*8-128)
+      camera_target_x=px<42 and 0 or mid(px-48,40,level.width*8-128)
     end,
     -- 2: intro 2
     function (px,py)
-      camera_target_x,camera_target_y=px<120 and 0 or px>136 and 128 or px-64,clamp(py-64,0,level.height*8-128)
+      camera_target_x,camera_target_y=px<120 and 0 or px>136 and 128 or px-64,mid(py-64,0,level.height*8-128)
     end,
     -- 3: level 1
     function (px,py)
-      camera_target_x,camera_target_y=clamp(px-56,0,level.width*8-128),py<level.camera_barrier_y*8+3 and 0 or level.camera_barrier_y*8
+      camera_target_x,camera_target_y=mid(px-56,0,level.width*8-128),py<level.camera_barrier_y*8+3 and 0 or level.camera_barrier_y*8
       for i,b in ipairs(level.camera_barriers_x) do
         camera_x_barrier(b,px,py)
       end
@@ -396,11 +392,11 @@ camera_modes={
       if py%128>4 and py%128<124 then
         py=(py\128)*128+64
       end
-      camera_target_x,camera_target_y=clamp(px-64,0,level.width*8-128),clamp(py-64,0,level.height*8-128)
+      camera_target_x,camera_target_y=mid(px-64,0,level.width*8-128),mid(py-64,0,level.height*8-128)
     end,
     -- 5: level 3-1 and 3-3
     function (px,py)
-      camera_target_x=clamp(px-32,0,level.width*8-128)
+      camera_target_x=mid(px-32,0,level.width*8-128)
     end,
     -- 6: level 3-2
     function (px,py)
@@ -413,7 +409,7 @@ camera_modes={
         c_flag=true
         c_offset=96
       end
-      camera_target_x=clamp(px-c_offset,0,level.width*8-128)
+      camera_target_x=mid(px-c_offset,0,level.width*8-128)
       for i,b in ipairs(level.camera_barriers_x) do
         camera_x_barrier(b,px,py)
       end
@@ -424,11 +420,11 @@ camera_modes={
     --7: level 3-3
     function (px,py)
       c_offset=px>420 and (px<436 and px-388 or 48) or 32
-      camera_target_x=clamp(px-c_offset,0,level.width*8-128)
+      camera_target_x=mid(px-c_offset,0,level.width*8-128)
     end,
     --8: end
     function (px,py)
-      camera_target_y=clamp(py-32,0,level.height*8-128)
+      camera_target_y=mid(py-32,0,level.height*8-128)
     end
 }
 
@@ -438,7 +434,7 @@ function snap_camera()
 end
 
 function tile_y(py)
-  return clamp(py\8,0,level.height-1)--max(0,min(py\8,level.height-1))
+  return mid(py\8,0,level.height-1)--max(0,min(py\8,level.height-1))
 end
 
 function goto_level(index)
@@ -771,7 +767,7 @@ function snowball.on_collide_x(self,moved,total)
   psfx(17,0,2)
   return true
 end
-function snowball.on_collide_y(self,moved,total)
+function snowball.on_collide_y(self)--,moved,total)
   if self.speed_y>=4 then
     self.speed_y=-2
     psfx(17,0,2)
