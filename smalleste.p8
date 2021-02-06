@@ -1049,7 +1049,7 @@ function _update()
   if delay_restart>0 then
     delay_restart-=1
     if delay_restart==0 then
-      load_room(0,0)
+      load_room(room.x,room.y)
     end
   end
 
