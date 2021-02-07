@@ -989,7 +989,7 @@ function load_room(x,y)
   --remove existing objects
   foreach(objects,destroy_object)
   --current room
-  room.x,room.y=x,y
+  room=vector(x,y)
   -- entities
   for tx=0,15 do
     for ty=0,15 do
@@ -1077,9 +1077,7 @@ end
 -- [drawing functions]
 
 function _draw()
-  if freeze>0 then
-    return
-  end
+  if (freeze>0) return
 
   -- reset all palette values
   pal()
@@ -1152,9 +1150,7 @@ function _draw()
     p.x+=p.dx
     p.y+=p.dy
     p.t-=0.2--1
-    if p.t<=0 then
-      del(dead_particles,p)
-    end
+    if (p.t<=0) del(dead_particles,p)
     crectfill(p.x-p.t,p.y-p.t,p.x+p.t,p.y+p.t,14+p.t*5%2)
   end)
 
