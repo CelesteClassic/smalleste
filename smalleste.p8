@@ -614,9 +614,8 @@ end
 key={
   if_not_fruit=true,
   update=function(this)
-    local was=flr(this.spr)
     this.spr=9.5+sin(frames/30)
-    if this.spr==10 and this.spr~=was then
+    if frames==18 then
       this.flip.x=not this.flip.x
     end
     if this.player_here() then
