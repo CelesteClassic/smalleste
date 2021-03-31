@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 29
+version 30
 __lua__
 -- celeste classic
 -- matt thorson + noel berry
@@ -568,8 +568,6 @@ lifeup={
   init=function(this)
     this.spd.y=-0.25
     this.duration=30
-    this.x-=2
-    this.y-=4
     this.flash=0
   end,
   update=function(this)
@@ -580,7 +578,7 @@ lifeup={
   end,
   draw=function(this)
     this.flash+=0.5
-    ?"1000",this.x-2,this.y,7+this.flash%2
+    ?"1000",this.x-4,this.y-4,7+this.flash%2
   end
 }
 
