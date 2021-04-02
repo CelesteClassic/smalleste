@@ -241,7 +241,7 @@ player={
     this.spr = not on_ground and (this.is_solid(h_input,0) and 5 or 3) or  -- wall slide or mid air
       btn(⬇️) and 6 or -- crouch
       btn(⬆️) and 7 or -- look up
-      1+(this.spd.x~=0 and h_input~=0 and this.spr_off%4 or 0) -- walk or stand
+      this.spd.x~=0 and h_input~=0 and 1+this.spr_off%4 or 1 -- walk or stand
 
     -- exit level off the top (except summit)
     if this.y<-4 and level_index()<31 then
