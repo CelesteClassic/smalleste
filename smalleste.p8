@@ -263,7 +263,6 @@ player={
     set_hair_color(this.djump)
     draw_hair(this)
     draw_obj_sprite(this)
-    --spr(this.spr,this.x,this.y,1,1,this.flip.x,this.flip.y)
     unset_hair_color()
   end
 }
@@ -295,6 +294,8 @@ end
 
 -- [other entities]
 
+
+
 player_spawn={
   init=function(this)
     sfx(4)
@@ -304,15 +305,14 @@ player_spawn={
     this.spd.y=-4
     this.state=0
     this.delay=0
+    this.djump=max_djump
     create_hair(this)
   end,
   update=function(this)
     -- jumping up
-    if this.state==0 then
-      if this.y<this.target+16 then
-        this.state=1
-        this.delay=3
-      end
+    if this.state==0 and this.y<this.target+16 then
+      this.state=1
+      this.delay=3
     -- falling
     elseif this.state==1 then
       this.spd.y+=0.5
@@ -342,13 +342,7 @@ player_spawn={
       end
     end
   end,
-  draw=function(this)
-    set_hair_color(max_djump)
-    draw_hair(this)
-    draw_obj_sprite(this)
-    --spr(this.spr,this.x,this.y)
-    unset_hair_color()
-  end
+  draw=player.draw
 }
 
 spring={
@@ -445,8 +439,10 @@ fall_floor={
   update=function(this)
     -- idling
     if this.state==0 then
-      if this.check(player,0,-1) or this.check(player,-1,0) or this.check(player,1,0) then
-        break_fall_floor(this)
+      for i=0,2 do
+        if this.check(player,i-1,-(i%2)) then
+          break_fall_floor(this)
+        end
       end
     -- shaking
     elseif this.state==1 then
@@ -468,15 +464,13 @@ fall_floor={
     end
   end,
   draw=function(this)
-    if this.state~=2 then
-      spr(this.state==1 and 26-this.delay/5 or 23,this.x,this.y)
-    end
+    spr(this.state==1 and 26-this.delay/5 or this.state==0 and 23,this.x,this.y)
   end
 }
 
 function break_fall_floor(obj)
- if obj.state==0 then
-  psfx(15)
+  if obj.state==0 then
+    psfx(15)
     obj.state=1
     obj.delay=15--how long until it falls
     obj.init_smoke()
