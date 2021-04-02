@@ -70,7 +70,7 @@ for i=0,24 do
     y=rnd(128),
     s=flr(rnd(1.25)),
     spd=0.25+rnd(5),
-    off=rnd(1),
+    off=rnd(),
     c=6+rnd(2),
   })
 end
@@ -254,8 +254,9 @@ player={
 
   draw=function(this)
     -- clamp in screen
-    if this.x<-1 or this.x>121 then
-      this.x=mid(this.x,-1,121)
+    clamped=mid(this.x,-1,121)
+    if this.x~=clamped then
+      this.x=clamped
       this.spd.x=0
     end
     -- draw player hair and sprite
@@ -402,7 +403,7 @@ end
 
 balloon={
   init=function(this)
-    this.offset=rnd(1)
+    this.offset=rnd()
     this.start=this.y
     this.timer=0
     this.hitbox=rectangle(-1,-1,10,10)
@@ -914,7 +915,7 @@ function init_object(type,x,y,tile)
   end
 
   function obj.move(ox,oy,start)
-    for axis in all({"x","y"}) do
+    for axis in all{"x","y"} do
       obj.rem[axis]+=axis=="x" and ox or oy
       local amt=flr(obj.rem[axis]+0.5)
       obj.rem[axis]-=amt
@@ -1083,11 +1084,8 @@ function _draw()
 
   -- start game flash
   if is_title() and start_game then
-    local c=start_game_flash>10 and (frames%10<5 and 7 or 10) or (start_game_flash>5 and 2 or start_game_flash>0 and 1 or 0)
-    if c<10 then
-      for i=1,15 do
-        pal(i,c)
-      end
+    for i=1,15 do
+      pal(i,start_game_flash>10 and (frames%10<5 and 7 or i) or (start_game_flash>5 and 2 or start_game_flash>0 and 1 or 0))
     end
   end
 
@@ -1204,7 +1202,7 @@ function sign(v)
 end
 
 function maybe()
-  return rnd(1)<0.5
+  return rnd()<0.5
 end
 
 function tile_at(x,y)
