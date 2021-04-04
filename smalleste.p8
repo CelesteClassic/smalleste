@@ -368,10 +368,7 @@ spring={
         this.delay=10
         this.init_smoke()
         -- crumble below spring
-        local below=this.check(fall_floor,0,1)
-        if below then
-          break_fall_floor(below)
-        end
+        break_fall_floor(this.check(fall_floor,0,1) or {})
         psfx(8)
       end
     elseif this.delay>0 then
@@ -390,10 +387,6 @@ spring={
     end
   end
 }
-
-function break_spring(obj)
-  obj.hide_in=15
-end
 
 balloon={
   init=function(this)
@@ -473,11 +466,8 @@ function break_fall_floor(obj)
     psfx(15)
     obj.state=1
     obj.delay=15--how long until it falls
-    obj.init_smoke()
-    local hit=obj.check(spring,0,-1)
-    if hit then
-      break_spring(hit)
-    end
+    obj.init_smoke();
+    (obj.check(spring,0,-1) or {}).hide_in=15
   end
 end
 
