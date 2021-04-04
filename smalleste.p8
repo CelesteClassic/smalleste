@@ -279,7 +279,7 @@ function set_hair_color(djump)
 end
 
 function draw_hair(obj)
-  local last=vector(obj.x+4-(obj.flip.x and -1 or 1)*2,obj.y+(btn(⬇️) and 4 or 3))
+  local last=vector(obj.x+(obj.flip.x and 6 or 2),obj.y+(btn(⬇️) and 4 or 3))
   for i,h in pairs(obj.hair) do
     h.x+=(last.x-h.x)/1.5
     h.y+=(last.y+0.5-h.y)/1.5
