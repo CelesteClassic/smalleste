@@ -254,7 +254,7 @@ player={
 
   draw=function(this)
     -- clamp in screen
-    clamped=mid(this.x,-1,121)
+    local clamped=mid(this.x,-1,121)
     if this.x~=clamped then
       this.x=clamped
       this.spd.x=0
