@@ -845,7 +845,7 @@ function init_object(type,x,y,tile)
   local obj={
     type=type,
     collideable=true,
-    solids=false,
+    --solids=false,
     spr=tile,
     flip=vector(),
     x=x,
