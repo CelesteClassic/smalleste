@@ -814,22 +814,26 @@ psfx=function(num)
 end
 
 -- [tile dict]
-tiles={
-  [1]=player_spawn,
-  [8]=key,
-  [11]=platform,
-  [12]=platform,
-  [18]=spring,
-  [20]=chest,
-  [22]=balloon,
-  [23]=fall_floor,
-  [26]=fruit,
-  [28]=fly_fruit,
-  [64]=fake_wall,
-  [86]=message,
-  [96]=big_chest,
-  [118]=flag
-}
+tiles={}
+foreach(split([[
+1,player_spawn
+8,key
+11,platform
+12,platform
+18,spring
+20,chest
+22,balloon
+23,fall_floor
+26,fruit
+28,fly_fruit
+64,fake_wall
+86,message
+96,big_chest
+118,flag
+]],"\n"),function(t)
+ local tile,obj=unpack(split(t))
+ tiles[tile]=_ENV[obj]
+end)
 
 -- [object functions]
 
