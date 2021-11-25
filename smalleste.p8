@@ -1073,7 +1073,7 @@ function _draw()
   -- start game flash
   if is_title() and start_game then
     for i=1,15 do
-      pal(i, start_game_flash<=0 and 0 or start_game_flash<=5 and 1 or start_game_flash<=10 and 2 or frames%10<5 and 7 or i)
+      pal(i, start_game_flash<=10 and ceil(max(start_game_flash)/5) or frames%10<5 and 7 or i)
     end
   end
 
