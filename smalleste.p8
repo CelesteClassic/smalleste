@@ -280,7 +280,7 @@ end
 
 function draw_hair(obj)
   local last=vector(obj.x+(obj.flip.x and 6 or 2),obj.y+(btn(⬇️) and 4 or 3))
-  for i,h in pairs(obj.hair) do
+  for i,h in ipairs(obj.hair) do
     h.x+=(last.x-h.x)/1.5
     h.y+=(last.y+0.5-h.y)/1.5
     circfill(h.x,h.y,mid(4-i,1,2),8)
