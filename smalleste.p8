@@ -169,7 +169,7 @@ player={
       if h_input~=0 and this.is_solid(h_input,0) and not this.is_ice(h_input,0) then
         maxfall=0.4
         -- wall slide smoke
-        if rnd(10)<2 then
+        if rnd()<0.2 then
           this.init_smoke(h_input*6)
         end
       end
