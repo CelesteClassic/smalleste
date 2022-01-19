@@ -925,7 +925,7 @@ function init_object(type,x,y,tile)
   end
 
   add(objects,obj);
-  (obj.type.init or stat)(obj)
+  (obj.type.init or max)(obj)
 
   return obj
 end
@@ -1042,7 +1042,7 @@ function _update()
   -- update each object
   foreach(objects,function(obj)
     obj.move(obj.spd.x,obj.spd.y,0);
-    (obj.type.update or stat)(obj)
+    (obj.type.update or max)(obj)
   end)
 
   -- start game
