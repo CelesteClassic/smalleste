@@ -800,7 +800,7 @@ room_title={
       elseif level==31 then
         ?"summit",52,62,7
       else
-        ?level.."00 m",level<10 and 54 or 54,62,7
+        ?level.."00 m",level<10 and 54 or 52,62,7
       end
       draw_time(4,4)
     end
