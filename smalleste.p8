@@ -97,7 +97,7 @@ player={
     end
 
     -- horizontal input
-    local h_input=btn(➡️) and 1 or btn(⬅️) and -1 or 0
+    local h_input=tonum(btn(➡️))-tonum(btn(⬅️))
 
     -- spike collision / bottom death
     if spikes_at(this.left(),this.top(),this.right(),this.bottom(),this.spd.x,this.spd.y) or
@@ -169,7 +169,7 @@ player={
       if h_input~=0 and this.is_solid(h_input,0) and not this.is_ice(h_input,0) then
         maxfall=0.4
         -- wall slide smoke
-        if rnd(10)<2 then
+        if rnd()<0.2 then
           this.init_smoke(h_input*6)
         end
       end
@@ -214,7 +214,7 @@ player={
         has_dashed=true
         this.dash_effect_time=10
         -- vertical input
-        local v_input=btn(⬆️) and -1 or btn(⬇️) and 1 or 0
+        local v_input=tonum(btn(⬇️))-tonum(btn(⬆️))
         -- calculate dash speeds
         this.spd=vector(
           h_input~=0 and h_input*(v_input~=0 and d_half or d_full) or (v_input~=0 and 0 or this.flip.x and -1 or 1),
@@ -476,7 +476,7 @@ smoke={
     this.spd=vector(0.3+rnd(0.2),-0.1)
     this.x+=-1+rnd(2)
     this.y+=-1+rnd(2)
-    this.flip=vector(maybe(),maybe())
+    this.flip=vector(rnd()<0.5,rnd()<0.5)
   end,
   update=function(this)
     this.spr+=0.2
@@ -800,7 +800,7 @@ room_title={
       elseif level==31 then
         ?"summit",52,62,7
       else
-        ?level.."00 m",level<10 and 54 or 54,62,7
+        ?level.."00 m",level<10 and 54 or 52,62,7
       end
       draw_time(4,4)
     end
@@ -925,7 +925,7 @@ function init_object(type,x,y,tile)
   end
 
   add(objects,obj);
-  (obj.type.init or stat)(obj)
+  (obj.type.init or max)(obj)
 
   return obj
 end
@@ -1042,7 +1042,7 @@ function _update()
   -- update each object
   foreach(objects,function(obj)
     obj.move(obj.spd.x,obj.spd.y,0);
-    (obj.type.update or stat)(obj)
+    (obj.type.update or max)(obj)
   end)
 
   -- start game
@@ -1187,10 +1187,6 @@ end
 
 function sign(v)
   return v~=0 and sgn(v) or 0
-end
-
-function maybe()
-  return rnd()<0.5
 end
 
 function tile_at(x,y)
