@@ -56,22 +56,22 @@ end
 clouds={}
 for i=0,16 do
   add(clouds,{
-    x=rnd(128),
-    y=rnd(128),
-    spd=1+rnd(4),
-    w=32+rnd(32)
+    x=rnd"128",
+    y=rnd"128",
+    spd=1+rnd"4",
+    w=32+rnd"32"
   })
 end
 
 particles={}
 for i=0,24 do
   add(particles,{
-    x=rnd(128),
-    y=rnd(128),
-    s=flr(rnd(1.25)),
-    spd=0.25+rnd(5),
+    x=rnd"128",
+    y=rnd"128",
+    s=flr(rnd"1.25"),
+    spd=0.25+rnd"5",
     off=rnd(),
-    c=6+rnd(2),
+    c=6+rnd"2",
   })
 end
 
@@ -128,7 +128,7 @@ player={
     if on_ground then
       this.grace=6
       if this.djump<max_djump then
-        psfx(54)
+        psfx"54"
         this.djump=max_djump
       end
     elseif this.grace>0 then
@@ -183,7 +183,7 @@ player={
       if this.jbuffer>0 then
         if this.grace>0 then
           -- normal jump
-          psfx(1)
+          psfx"1"
           this.jbuffer=0
           this.grace=0
           this.spd.y=-2
@@ -192,7 +192,7 @@ player={
           -- wall jump
           local wall_dir=(this.is_solid(-3,0) and -1 or this.is_solid(3,0) and 1 or 0)
           if wall_dir~=0 then
-            psfx(2)
+            psfx"2"
             this.jbuffer=0
             this.spd=vector(wall_dir*(-1-maxrun),-2)
             if not this.is_ice(wall_dir*3,0) then
@@ -221,7 +221,7 @@ player={
           v_input~=0 and v_input*(h_input~=0 and d_half or d_full) or 0
         )
         -- effects
-        psfx(3)
+        psfx"3"
         freeze=2
         shake=6
         -- dash target speeds and accels
@@ -231,7 +231,7 @@ player={
         this.dash_accel_y=this.spd.x==0 and 1.5 or 1.06066017177
       elseif this.djump<=0 and dash then
         -- failed dash smoke
-        psfx(9)
+        psfx"9"
         this.init_smoke()
       end
     end
@@ -298,7 +298,7 @@ end
 
 player_spawn={
   init=function(this)
-    sfx(4)
+    sfx"4"
     this.spr=3
     this.target=this.y
     this.y=128
@@ -329,7 +329,7 @@ player_spawn={
           this.delay=5
           shake=5
           this.init_smoke(0,4)
-          sfx(5)
+          sfx"5"
         end
       end
     -- landing and spawning player object
@@ -369,7 +369,7 @@ spring={
         this.init_smoke()
         -- crumble below spring
         break_fall_floor(this.check(fall_floor,0,1) or {})
-        psfx(8)
+        psfx"8"
       end
     elseif this.delay>0 then
       this.delay-=1
@@ -401,7 +401,7 @@ balloon={
       this.y=this.start+sin(this.offset)*2
       local hit=this.player_here()
       if hit and hit.djump<max_djump then
-        psfx(6)
+        psfx"6"
         this.init_smoke()
         hit.djump=max_djump
         this.spr=0
@@ -410,7 +410,7 @@ balloon={
     elseif this.timer>0 then
       this.timer-=1
     else
-      psfx(7)
+      psfx"7"
       this.init_smoke()
       this.spr=22
     end
@@ -449,7 +449,7 @@ fall_floor={
     elseif this.state==2 then
       this.delay-=1
       if this.delay<=0 and not this.player_here() then
-        psfx(7)
+        psfx"7"
         this.state=0
         this.collideable=true
         this.init_smoke()
@@ -463,7 +463,7 @@ fall_floor={
 
 function break_fall_floor(obj)
   if obj.state==0 then
-    psfx(15)
+    psfx"15"
     obj.state=1
     obj.delay=15--how long until it falls
     obj.init_smoke();
@@ -473,9 +473,9 @@ end
 
 smoke={
   init=function(this)
-    this.spd=vector(0.3+rnd(0.2),-0.1)
-    this.x+=-1+rnd(2)
-    this.y+=-1+rnd(2)
+    this.spd=vector(0.3+rnd"0.2",-0.1)
+    this.x+=-1+rnd"2"
+    this.y+=-1+rnd"2"
     this.flip=vector(rnd()<0.5,rnd()<0.5)
   end,
   update=function(this)
@@ -513,7 +513,7 @@ fly_fruit={
       this.sfx_delay-=1
       if this.sfx_delay<=0 then
         sfx_timer=20
-        sfx(14)
+        sfx"14"
       end
      end
       this.spd.y=appr(this.spd.y,-3.5,0.25)
@@ -542,7 +542,7 @@ function check_fruit(this)
   if hit then
     hit.djump=max_djump
     sfx_timer=20
-    sfx(13)
+    sfx"13"
     got_fruit[level_index()]=true
     init_object(lifeup,this.x,this.y)
     destroy_object(this)
@@ -591,7 +591,7 @@ fake_wall={
 
 function init_fruit(this,ox,oy)
   sfx_timer=20
-  sfx(16)
+  sfx"16"
   init_object(fruit,this.x+ox,this.y+oy,26)
   destroy_object(this)
 end
@@ -604,7 +604,7 @@ key={
       this.flip.x=not this.flip.x
     end
     if this.player_here() then
-      sfx(23)
+      sfx"23"
       sfx_timer=10
       destroy_object(this)
       has_key=true
@@ -622,7 +622,7 @@ chest={
   update=function(this)
     if has_key then
       this.timer-=1
-      this.x=this.start-1+rnd(3)
+      this.x=this.start-1+rnd"3"
       if this.timer<=0 then
         init_fruit(this,0,-4)
       end
@@ -664,7 +664,7 @@ message={
        this.index+=0.5
         if this.index>=this.last+1 then
           this.last+=1
-          sfx(35)
+          sfx"35"
         end
       end
       local _x,_y=8,96
@@ -695,7 +695,7 @@ big_chest={
       local hit=this.check(player,0,8)
       if hit and hit.is_solid(0,1) then
         music(-1,500,7)
-        sfx(37)
+        sfx"37"
         pause_player=true
         hit.spd=vector(0,0)
         this.state=1
@@ -711,10 +711,10 @@ big_chest={
       flash_bg=true
       if this.timer<=45 and #this.particles<50 then
         add(this.particles,{
-          x=1+rnd(14),
+          x=1+rnd"14",
           y=0,
-          h=32+rnd(32),
-          spd=8+rnd(8)
+          h=32+rnd"32",
+          spd=8+rnd"8"
         })
       end
       if this.timer<0 then
@@ -743,7 +743,7 @@ orb={
     local hit=this.player_here()
     if this.spd.y==0 and hit then
       music_timer=45
-      sfx(51)
+      sfx"51"
       freeze=10
       shake=10
       destroy_object(this)
@@ -777,7 +777,7 @@ flag={
       draw_time(49,16)
       ?"deaths:"..deaths,48,24,7
     elseif this.player_here() then
-      sfx(55)
+      sfx"55"
       sfx_timer=30
       this.show=true
     end
@@ -807,7 +807,7 @@ room_title={
   end
 }
 
-psfx=function(num)
+function psfx(num)
   if sfx_timer<=0 then
    sfx(num)
   end
@@ -936,7 +936,7 @@ end
 
 function kill_player(obj)
   sfx_timer=12
-  sfx(0)
+  sfx"0"
   deaths+=1
   shake=10
   destroy_object(obj)
@@ -1027,7 +1027,7 @@ function _update()
     shake-=1
     camera()
     if screenshake and shake~=0 then
-      camera(-2+rnd(5),-2+rnd(5))
+      camera(-2+rnd"5",-2+rnd"5")
     end
   end
 
@@ -1053,9 +1053,9 @@ function _update()
         begin_game()
       end
     elseif btn(🅾️) or btn(❎) then
-      music(-1)
+      music"-1"
       start_game_flash,start_game=50,true
-      sfx(38)
+      sfx"38"
     end
   end
 end
@@ -1088,7 +1088,7 @@ function _draw()
       crectfill(c.x,c.y,c.x+c.w,c.y+16-c.w*0.1875,new_bg and 14 or 1)
       if c.x>128 then
         c.x=-c.w
-        c.y=rnd(120)
+        c.y=rnd"120"
       end
     end)
   end
@@ -1126,7 +1126,7 @@ function _draw()
     crectfill(p.x,p.y,p.x+p.s,p.y+p.s,p.c)
     if p.x>132 then
       p.x=-4
-      p.y=rnd(128)
+      p.y=rnd"128"
     end
   end)
 
