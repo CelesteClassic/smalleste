@@ -971,7 +971,7 @@ function next_room()
 end
 
 function load_room(x,y)
-  has_dashed,has_key=false,false
+  has_dashed,has_key=false,--false
   --remove existing objects
   foreach(objects,destroy_object)
   --current room
