@@ -16,11 +16,9 @@ end
 
 -- [globals]
 
-room,
 objects,got_fruit,
 freeze,shake,delay_restart,sfx_timer,music_timer,
 screenshake=
-vector(0,0),
 {},{},
 0,0,0,0,0,
 true
