@@ -7,7 +7,7 @@ __lua__
 -- "data structures"
 
 function vector(x,y)
-  return {x=x,y=y}
+  return rectangle(x,y)
 end
 
 function rectangle(x,y,w,h)
@@ -975,7 +975,7 @@ function load_room(x,y)
   --remove existing objects
   foreach(objects,destroy_object)
   --current room
-  room.x,room.y=x,y
+  room=vector(x,y)
   -- entities
   for tx=0,15 do
     for ty=0,15 do
