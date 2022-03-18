@@ -97,7 +97,7 @@ player={
     end
 
     -- horizontal input
-    local h_input=tonum(btn(➡️))-tonum(btn(⬅️))
+    local h_input=btn(➡️) and 1 or btn(⬅️) and -1 or 0
 
     -- spike collision / bottom death
     if spikes_at(this.left(),this.top(),this.right(),this.bottom(),this.spd.x,this.spd.y) or
