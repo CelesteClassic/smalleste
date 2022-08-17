@@ -907,10 +907,11 @@ function init_object(type,x,y,tile)
    obj.rem[axis]-=amt
    if obj.solids then
     local step=sign(amt)
+    local d=axis=="x" and step or 0
     for i=start,abs(amt) do
-     obj[axis]+=step
-     if obj.is_solid(0,0) then
-      obj[axis]-=step
+     if not obj.is_solid(d,step-d) then
+      obj[axis]+=step
+     else
       obj.spd[axis],obj.rem[axis]=0,0
       break
      end
