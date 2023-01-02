@@ -4,7 +4,7 @@ __lua__
 level_index,level_intro=0,0
 
 function game_start()
-  
+
   -- reset state
   snow,clouds,
   freeze_time,frames,seconds,minutes,shake,sfx_timer,
@@ -17,7 +17,7 @@ function game_start()
   {},0,
   0,0
 
-  for i=0,25 do 
+  for i=0,25 do
     add(snow,{x=rnd(132),y=rnd(132)})
     add(clouds,{x=rnd(132),y=rnd(132),s=16+rnd(32)})
   end
@@ -446,7 +446,7 @@ function goto_level(index)
     level_intro=60
   end
 
-  if level_index==2 then 
+  if level_index==2 then
     psfx(17,8,16)
   end
 
@@ -460,7 +460,7 @@ function goto_level(index)
     current_music=level.music
     music(level.music)
   end
-  
+
   -- load level contents
   restart_level()
 end
@@ -550,7 +550,7 @@ object = {
  freeze=0
 }
 
-function object.move_x(self,x,on_collide) 
+function object.move_x(self,x,on_collide)
   self.remainder_x+=x
   local mx=flr(self.remainder_x+0.5)
   self.remainder_x-=mx
@@ -574,7 +574,7 @@ function object.move_y(self,y,on_collide)
   self.remainder_y+=y
   local my=flr(self.remainder_y+0.5)
   self.remainder_y-=my
-  
+
   local total,mys=my,sgn(my)
   local mys=sgn(my)
   while my~=0
@@ -818,7 +818,7 @@ springboard.grapple_mode,springboard.holdable,springboard.thrown_timer=3,true,0
 function springboard.update(self)
   if not self.held then
     self.thrown_timer-=1
-    --friction and gravity  
+    --friction and gravity
     if self:check_solid(0,1) then
       self.speed_x=approach(self.speed_x,0,1)
     else
@@ -1067,12 +1067,12 @@ function player.bounce(self,x,y)
   self.auto_var_jump=
   0,-4,-4,4,0,true
   self.speed_x+=sgn(self.x-x)*0.5
-  self:move_y(y-self.y) 
+  self:move_y(y-self.y)
 end
 
 function player.spring(self,y)
   consume_jump_press()
-  if input_jump then 
+  if input_jump then
     psfx(17,2,3)
   else
     psfx(17,0,2)
@@ -1257,7 +1257,7 @@ function player.update(self)
       else
         self.t_var_jump=0
       end
-    end   
+    end
 
     -- jumping
     if input_jump_pressed>0 then
@@ -1353,7 +1353,7 @@ function player.update(self)
 
   elseif self.state==11 then
     -- grapple attached state
-    
+
     -- start boost
     if not self.grapple_boost then
       self.grapple_boost,self.speed_x=true,self.grapple_dir*8
@@ -1679,7 +1679,7 @@ function px9_decomp(x0,y0,src,vget,vset)
       end
     end
   end
-  -- bit cache is between 16 and 
+  -- bit cache is between 16 and
   -- 31 bits long with the next
   -- bit always aligned to the
   -- lsb of the fractional part
