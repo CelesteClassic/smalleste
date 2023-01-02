@@ -147,7 +147,7 @@ function _draw()
   for x=mid(0,camera_x\8,level.width),mid(0,(camera_x+128)\8,level.width) do
     for y=mid(0,camera_y\8,level.height),mid(0,(camera_y+128)\8,level.height) do
       local tile=tile_at(x, y)
-      if level.pal and fget(tile,7) then level.pal() end
+      if level.pal and fget(tile,7) then pal(palettes[level.pal]) end
       if tile~=0 and fget(tile,0) then spr(tile,x*8,y*8) end
       pal() palt()
     end
@@ -311,7 +311,7 @@ levels={
     camera_mode=4,
     music=2,
     title = "glacial caves",
-    pal=function() pal(2,12) pal(5,2) end,
+    pal=1,
     columns = 1
   },
   {
@@ -321,7 +321,7 @@ levels={
     camera_mode=5,
     music=2,
     title="golden valley",
-    pal=function() pal(2,14) pal(5,2) end,
+    pal=2,
     bg=13,
     clouds=15,
     fogmode=2
@@ -333,7 +333,7 @@ levels={
     camera_mode=6,
     camera_barriers_x={105},
     music=2,
-    pal=function() pal(2,14) pal(5,2) end,
+    pal=2,
     bg=13,
     clouds=15,
     fogmode=2
@@ -344,7 +344,7 @@ levels={
     height=16,
     camera_mode=7,
     music=2,
-    pal=function() pal(2,12) pal(5,2) end,
+    pal=1,
     bg=13,
     clouds=7,
     fogmode=2,
@@ -356,12 +356,17 @@ levels={
     title="destination",
     camera_mode=8,
     music=2,
-    pal=function() pal(2, 1) pal(7, 11) end,
+    pal=3,
     bg=15,
     clouds=7,
     fogmode=2,
     right_edge=true
   }
+}
+palettes={
+  {[2]=12,[5]=2},
+  {[2]=14,[5]=2},
+  {[2]=1,[7]=11},
 }
 
 function camera_x_barrier(tile_x,px,py)
