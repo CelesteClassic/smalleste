@@ -119,7 +119,7 @@ function _draw()
     return
   end
 
-  local camera_x,camera_y=peek2(0x5f28),peek2(0x5f2a)
+  local camera_x,camera_y=peek2(0x5f28,2)
 
   if shake>0 then
     camera(camera_x-2+rnd(5),camera_y-2+rnd(5))
@@ -230,7 +230,7 @@ function draw_clouds(scale,ox,oy,sx,sy,color,count)
     end
     c.x+=(4-i%4)*0.25
   end
-  clip(0,0,128,128)
+  clip()
 end
 
 function draw_snow()
