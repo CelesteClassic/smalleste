@@ -5,6 +5,15 @@ function splat(...)
   return unpack(split(...))
 end
 
+function parse(str,obj)
+  obj=obj or {}
+  for chunk in all(split(str)) do
+    local k,v=splat(chunk,"=")
+    obj[k]=v
+  end
+  return obj
+end
+
 level_index,level_intro=0,0
 
 function game_start()
@@ -277,91 +286,14 @@ function draw_sine_h(x0,x1,y,col,amplitude,time_freq,x_freq,fade_x_dist)
 end
 
 levels={
-  {
-    offset=0,
-    width=96,
-    height=16,
-    camera_mode=1,
-    music=38,
-  },
-  {
-    offset=343,
-    width=32,
-    height=32,
-    camera_mode=2,
-    music=36,
-    fogmode=1,
-    clouds=0,
-    columns=1
-  },
-  {
-    offset=679,
-    width=128,
-    height=22,
-    camera_mode=3,
-    camera_barriers_x={38},
-    camera_barrier_y=6,
-    music=2,
-    title="trailhead"
-  },
-  {
-    offset=1313,
-    width=128,
-    height=32,
-    camera_mode=4,
-    music=2,
-    title = "glacial caves",
-    pal=1,
-    columns = 1
-  },
-  {
-    offset=2411,
-    width=128,
-    height=16,
-    camera_mode=5,
-    music=2,
-    title="golden valley",
-    pal=2,
-    bg=13,
-    clouds=15,
-    fogmode=2
-  },
-  {
-    offset=2645,
-    width=128,
-    height=16,
-    camera_mode=6,
-    camera_barriers_x={105},
-    music=2,
-    pal=2,
-    bg=13,
-    clouds=15,
-    fogmode=2
-  },
-  {
-    offset=2880,
-    width=128,
-    height=16,
-    camera_mode=7,
-    music=2,
-    pal=1,
-    bg=13,
-    clouds=7,
-    fogmode=2,
-  },
-  {
-    offset=3079,
-    width=16,
-    height=62,
-    title="destination",
-    camera_mode=8,
-    music=2,
-    pal=3,
-    bg=15,
-    clouds=7,
-    fogmode=2,
-    right_edge=true
-  }
+  parse"offset=0,width=96,height=16,camera_mode=1,music=38",
+  parse"offset=343,width=32,height=32,camera_mode=2,music=36,clouds=0,fogmode=1,columns=1",
+  parse("offset=679,width=128,height=22,camera_mode=3,music=2,camera_barrier_y=6,title=trailhead",{camera_barriers_x={38}}),
+  parse"offset=1313,width=128,height=32,camera_mode=4,music=2,pal=1,columns=1,title=glacial caves",
+  parse"offset=2411,width=128,height=16,camera_mode=5,music=2,pal=2,bg=13,clouds=15,fogmode=2,title=golden valley",
+  parse("offset=2645,width=128,height=16,camera_mode=6,music=2,pal=2,bg=13,clouds=15,fogmode=2",{camera_barriers_x={105}}),
+  parse"offset=2880,width=128,height=16,camera_mode=7,music=2,pal=1,bg=13,clouds=7,fogmode=2",
+  parse"offset=3079,width=16,height=62,camera_mode=8,music=2,pal=3,bg=15,clouds=7,fogmode=2,right_edge=yes,title=destination",
 }
 palettes={
   {[2]=12,[5]=2},
@@ -547,20 +479,7 @@ end
 objects,types,lookup={},{},{}
 function lookup.__index(self, i) return self.base[i] end
 
-object = {
- speed_x=0,
- speed_y=0,
- remainder_x=0,
- remainder_y=0,
- hit_x=0,
- hit_y=0,
- hit_w=8,
- hit_h=8,
- grapple_mode=0,
- hazard=0,
- facing=1,
- freeze=0
-}
+object = parse"speed_x=0,speed_y=0,remainder_x=0,remainder_y=0,hit_x=0,hit_y=0,hit_w=8,hit_h=8,grapple_mode=0,hazard=0,facing=1,freeze=0"
 
 function object.move_x(self,x,on_collide)
   self.remainder_x+=x
