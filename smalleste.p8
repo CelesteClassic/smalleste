@@ -4,24 +4,29 @@ __lua__
 -- celeste classic
 -- matt thorson + noel berry
 
+function splat(...)
+  return unpack(split(...))
+end
+
 -- "data structures"
 
 function vector(x,y)
  return {x=x,y=y}
 end
 
-function rectangle(x,y,w,h)
+function rectangle(strargs)
+ local x,y,w,h=splat(strargs)
  return {x=x,y=y,w=w,h=h}
 end
 
 -- [globals]
 
 objects,got_fruit,
-freeze,shake,delay_restart,sfx_timer,music_timer,
-screenshake=
+screenshake,
+freeze,shake,delay_restart,sfx_timer,music_timer=
 {},{},
-0,0,0,0,0,
-true
+true,
+splat"0,0,0,0,0"
 
 -- [entry point]
 
@@ -31,13 +36,13 @@ end
 
 function title_screen()
  frames,start_game_flash=0,0
- music(40,0,7)
+ music(splat"40,0,7")
  load_room(7,3)
 end
 
 function begin_game()
- max_djump,deaths,frames,seconds,minutes,music_timer=1,0,0,0,0,0
- music(0,0,7)
+ max_djump,deaths,frames,seconds,minutes,music_timer=splat"1,0,0,0,0,0"
+ music(splat"0,0,7")
  load_room(0,0)
 end
 
@@ -79,14 +84,21 @@ dead_particles={}
 
 player={
  init=function(this)
-  this.grace,this.jbuffer=0,0
   this.djump=max_djump
-  this.dash_time,this.dash_effect_time=0,0
-  this.dash_target_x,this.dash_target_y=0,0
-  this.dash_accel_x,this.dash_accel_y=0,0
-  this.hitbox=rectangle(1,3,6,5)
-  this.spr_off=0
+  this.hitbox=rectangle"1,3,6,5"
   this.solids=true
+
+  this.grace,this.jbuffer,
+  this.dash_time,this.dash_effect_time,
+  this.dash_target_x,this.dash_target_y,
+  this.dash_accel_x,this.dash_accel_y,
+  this.spr_off=
+  splat"0,0,\
+  0,0,\
+  0,0,\
+  0,0,\
+  0"
+
   create_hair(this)
  end,
  update=function(this)
@@ -202,8 +214,7 @@ player={
    end
 
    -- dash
-   local d_full=5
-   local d_half=3.5355339059 -- 5 * sqrt(2)
+   local d_full,d_half=5,3.5355339059 -- 5 * sqrt(2)
 
    if this.djump>0 and dash then
     this.init_smoke()
@@ -391,7 +402,7 @@ balloon={
   this.offset=rnd()
   this.start=this.y
   this.timer=0
-  this.hitbox=rectangle(-1,-1,10,10)
+  this.hitbox=rectangle"-1,-1,10,10"
  end,
  update=function(this)
   if this.spr==22 then
@@ -568,7 +579,7 @@ lifeup={
 fake_wall={
  if_not_fruit=true,
  update=function(this)
-  this.hitbox=rectangle(-1,-1,18,18)
+  this.hitbox=rectangle"-1,-1,18,18"
   local hit=this.player_here()
   if hit and hit.dash_effect_time>0 then
    hit.spd=vector(sign(hit.spd.x)*-1.5,-1.5)
@@ -580,7 +591,7 @@ fake_wall={
    end
    init_fruit(this,4,4)
   end
-  this.hitbox=rectangle(0,0,16,16)
+  this.hitbox=rectangle"0,0,16,16"
  end,
  draw=function(this)
   spr(64,this.x,this.y,2,2)
@@ -692,7 +703,7 @@ big_chest={
   if this.state==0 then
    local hit=this.check(player,0,8)
    if hit and hit.is_solid(0,1) then
-    music(-1,500,7)
+    music(splat"-1,500,7")
     sfx"37"
     pause_player=true
     hit.spd=vector(0,0)
@@ -769,8 +780,8 @@ flag={
   draw_obj_sprite(this)
   --spr(this.spr,this.x,this.y)
   if this.show then
-   rectfill(32,2,96,31,0)
-   spr(26,55,6)
+   rectfill(splat"32,2,96,31,0")
+   spr(splat"26,55,6")
    ?"x"..this.score,64,9,7
    draw_time(49,16)
    ?"deaths:"..deaths,48,24,7
@@ -791,12 +802,12 @@ room_title={
   if this.delay<-30 then
    destroy_object(this)
   elseif this.delay<0 then
-   rectfill(24,58,104,70,0)
+   rectfill(splat"24,58,104,70,0")
    local level=level_index()
    if level==12 then
-    ?"old site",48,62,7
+    ?splat"old site,48,62,7"
    elseif level==31 then
-    ?"summit",52,62,7
+    ?splat"summit,52,62,7"
    else
     ?level.."00 m",level<10 and 54 or 52,62,7
    end
@@ -848,7 +859,7 @@ function init_object(type,x,y,tile)
   flip=vector(),
   x=x,
   y=y,
-  hitbox=rectangle(0,0,8,8),
+  hitbox=rectangle"0,0,8,8",
   spd=vector(0,0),
   rem=vector(0,0),
  }
@@ -961,9 +972,9 @@ end
 function next_room()
  local level=level_index()
  if level==11 or level==21 or level==30 then -- quiet for old site, 2200m, summit
-  music(30,500,7)
+  music(splat"30,500,7")
  elseif level==12 then -- 1300m
-  music(20,500,7)
+  music(splat"20,500,7")
  end
  load_room(level%8,level\8)
 end
@@ -1003,7 +1014,7 @@ function _update()
  if music_timer>0 then
   music_timer-=1
   if music_timer<=0 then
-   music(10,0,7)
+   music(splat"10,0,7")
   end
  end
 
@@ -1094,7 +1105,7 @@ function _draw()
  local rx,ry=room.x*16,room.y*16
 
  -- draw bg terrain
- map(rx,ry,0,0,16,16,4)
+ map(rx,ry,splat"0,0,16,16,4")
 
  -- draw clouds + orb chest
  foreach(objects,function(o)
@@ -1104,7 +1115,7 @@ function _draw()
  end)
 
  -- draw terrain (offset if title screen)
- map(rx,ry,is_title() and -4 or 0,0,16,16,2)
+ map(rx,ry,is_title() and -4 or 0,splat"0,16,16,2")
 
  -- draw objects
  foreach(objects,function(o)
@@ -1141,16 +1152,16 @@ function _draw()
 
  -- credits
  if is_title() then
-  ?"z+x",58,80,5
-  ?"matt thorson",42,96,5
-  ?"noel berry",46,102,5
+  ?splat"z+x,58,80,5"
+  ?splat"matt thorson,42,96,5"
+  ?splat"noel berry,46,102,5"
  end
 
  -- summit blinds effect
  if level_index()==31 and objects[2].type==player then
   local diff=min(24,40-abs(objects[2].x-60))
   rectfill(0,0,diff,127,0)
-  rectfill(127-diff,0,127,127,0)
+  rectfill(127-diff,splat"0,127,127,0")
  end
 end
 
