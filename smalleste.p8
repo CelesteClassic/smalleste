@@ -273,7 +273,7 @@ function create_hair(obj)
 end
 
 function set_hair_color(djump)
- pal(8,djump==1 and 8 or djump==0 and 12 or frames%6<3 and 7 or 11)
+ pal(8,({8,frames%6<3 and 7 or 11})[djump] or 12)
 end
 
 function draw_hair(obj)
