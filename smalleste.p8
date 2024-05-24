@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 36
 __lua__
 -- celeste classic
--- matt thorson + noel berry
+-- maddy thorson + noel berry
 
 -- "data structures"
 
@@ -1142,7 +1142,7 @@ function _draw()
  -- credits
  if is_title() then
   ?"z+x",58,80,5
-  ?"matt thorson",42,96,5
+  ?"maddy thorson",40,96,5
   ?"noel berry",46,102,5
  end
 
