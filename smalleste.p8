@@ -1,5 +1,5 @@
 pico-8 cartridge // http://www.pico-8.com
-version 36
+version 42
 __lua__
 -- celeste classic
 -- maddy thorson + noel berry
@@ -216,7 +216,7 @@ player={
     -- calculate dash speeds
     this.spd=vector(
      h_input~=0 and h_input*(v_input~=0 and d_half or d_full) or (v_input~=0 and 0 or this.flip.x and -1 or 1),
-     v_input~=0 and v_input*(h_input~=0 and d_half or d_full) or 0
+     v_input*(h_input~=0 and d_half or d_full)
     )
     -- effects
     psfx"3"
