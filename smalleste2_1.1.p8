@@ -1,23 +1,36 @@
 pico-8 cartridge // http://www.pico-8.com
 version 29
 __lua__
+function splat(...)
+  return unpack(split(...))
+end
+
+function parse(str,obj)
+  obj=obj or {}
+  for chunk in all(split(str)) do
+    local k,v=splat(chunk,"=")
+    obj[k]=v
+  end
+  return obj
+end
+
 level_index,level_intro=0,0
 
 function game_start()
-  
+
   -- reset state
-  snow,clouds,
+  snow,clouds,collected,
   freeze_time,frames,seconds,minutes,shake,sfx_timer,
   berry_count,death_count,
-  collected,show_score,
+  show_score,
   camera_x,camera_y=
-  {},{},
-  0,0,0,0,0,0,
-  0,0,
-  {},0,
-  0,0
+  {},{},{},
+  splat"0,0,0,0,0,0,\
+  0,0,\
+  0,\
+  0,0"
 
-  for i=0,25 do 
+  for i=0,25 do
     add(snow,{x=rnd(132),y=rnd(132)})
     add(clouds,{x=rnd(132),y=rnd(132),s=16+rnd(32)})
   end
@@ -49,7 +62,7 @@ function _update()
   -- level intro card
   elseif level_intro>0 then
     level_intro-=1
-    if level_intro==0 then psfx(17,24,9) end
+    if level_intro==0 then psfx"17,24,9" end
   -- normal level
   else
     -- timers
@@ -93,13 +106,13 @@ function _draw()
       local c=titlescreen_flash>10 and (titlescreen_flash%10<5 and 7 or 10) or titlescreen_flash>5 and 2 or titlescreen_flash>0 and 1 or 0
       if c<10 then for i=0,15 do pal(i,c) end end
     end
-    sspr(64,32,64,32,36,32)
-    rect(0,0,127,127,7)
-    print_center("lani's trek",68,14)
-    print_center("a game by",80,1)
-    print_center("maddy thorson",87,5)
-    print_center("noel berry",94,5)
-    print_center("lena raine",101,5)
+    sspr(splat"64,32,64,32,36,32")
+    rect(splat"0,0,127,127,7")
+    print_center(splat"lani's trek,68,14")
+    print_center(splat"a game by,80,1")
+    print_center(splat"maddy thorson,87,5")
+    print_center(splat"noel berry,94,5")
+    print_center(splat"lena raine,101,5")
     draw_snow()
     return
   end
@@ -115,7 +128,7 @@ function _draw()
     return
   end
 
-  local camera_x,camera_y=peek2(0x5f28),peek2(0x5f2a)
+  local camera_x,camera_y=peek2(0x5f28,2)
 
   if shake>0 then
     camera(camera_x-2+rnd(5),camera_y-2+rnd(5))
@@ -143,7 +156,7 @@ function _draw()
   for x=mid(0,camera_x\8,level.width),mid(0,(camera_x+128)\8,level.width) do
     for y=mid(0,camera_y\8,level.height),mid(0,(camera_y+128)\8,level.height) do
       local tile=tile_at(x, y)
-      if level.pal and fget(tile,7) then level.pal() end
+      if level.pal and fget(tile,7) then pal(palettes[level.pal]) end
       if tile~=0 and fget(tile,0) then spr(tile,x*8,y*8) end
       pal() palt()
     end
@@ -151,15 +164,15 @@ function _draw()
 
   -- score
   if show_score>105 then
-    rectfill(34,392,98,434,1)
-    rectfill(32,390,96,432,0)
-    rect(32,390,96,432,7)
-    spr(21,44,396)
-    ?"x "..berry_count,56,398,7
-    spr(87,44,408)
+    rectfill(splat"34,392,98,434,1")
+    rectfill(splat"32,390,96,432,0")
+    rect(splat"32,390,96,432,7")
+    spr(splat"21,44,396")
+    ?"x "..berry_count,splat"56,398,7"
+    spr(splat"87,44,408")
     draw_time(56,408)
-    spr(71,44,420)
-    ?"x "..death_count,56,421,7
+    spr(splat"71,44,420")
+    ?"x "..death_count,splat"56,421,7"
   end
 
   -- draw objects
@@ -226,7 +239,7 @@ function draw_clouds(scale,ox,oy,sx,sy,color,count)
     end
     c.x+=(4-i%4)*0.25
   end
-  clip(0,0,128,128)
+  clip()
 end
 
 function draw_snow()
@@ -245,7 +258,8 @@ function approach(x,target,max_delta)
   return x<target and min(x+max_delta,target) or max(x-max_delta,target)
 end
 
-function psfx(id,off,len,lock)
+function psfx(strargs)
+  local id,off,len,lock=splat(strargs)
   if sfx_timer<=0 or lock then
     sfx(id,3,off,len)
     if lock then sfx_timer=lock end
@@ -272,91 +286,19 @@ function draw_sine_h(x0,x1,y,col,amplitude,time_freq,x_freq,fade_x_dist)
 end
 
 levels={
-  {
-    offset=0,
-    width=96,
-    height=16,
-    camera_mode=1,
-    music=38,
-  },
-  {
-    offset=343,
-    width=32,
-    height=32,
-    camera_mode=2,
-    music=36,
-    fogmode=1,
-    clouds=0,
-    columns=1
-  },
-  {
-    offset=679,
-    width=128,
-    height=22,
-    camera_mode=3,
-    camera_barriers_x={38},
-    camera_barrier_y=6,
-    music=2,
-    title="trailhead"
-  },
-  {
-    offset=1313,
-    width=128,
-    height=32,
-    camera_mode=4,
-    music=2,
-    title = "glacial caves",
-    pal=function() pal(2,12) pal(5,2) end,
-    columns = 1
-  },
-  {
-    offset=2411,
-    width=128,
-    height=16,
-    camera_mode=5,
-    music=2,
-    title="golden valley",
-    pal=function() pal(2,14) pal(5,2) end,
-    bg=13,
-    clouds=15,
-    fogmode=2
-  },
-  {
-    offset=2645,
-    width=128,
-    height=16,
-    camera_mode=6,
-    camera_barriers_x={105},
-    music=2,
-    pal=function() pal(2,14) pal(5,2) end,
-    bg=13,
-    clouds=15,
-    fogmode=2
-  },
-  {
-    offset=2880,
-    width=128,
-    height=16,
-    camera_mode=7,
-    music=2,
-    pal=function() pal(2,12) pal(5,2) end,
-    bg=13,
-    clouds=7,
-    fogmode=2,
-  },
-  {
-    offset=3079,
-    width=16,
-    height=62,
-    title="destination",
-    camera_mode=8,
-    music=2,
-    pal=function() pal(2, 1) pal(7, 11) end,
-    bg=15,
-    clouds=7,
-    fogmode=2,
-    right_edge=true
-  }
+  parse"offset=0,width=96,height=16,camera_mode=1,music=38",
+  parse"offset=343,width=32,height=32,camera_mode=2,music=36,clouds=0,fogmode=1,columns=1",
+  parse("offset=679,width=128,height=22,camera_mode=3,music=2,camera_barrier_y=6,title=trailhead",{camera_barriers_x={38}}),
+  parse"offset=1313,width=128,height=32,camera_mode=4,music=2,pal=1,columns=1,title=glacial caves",
+  parse"offset=2411,width=128,height=16,camera_mode=5,music=2,pal=2,bg=13,clouds=15,fogmode=2,title=golden valley",
+  parse("offset=2645,width=128,height=16,camera_mode=6,music=2,pal=2,bg=13,clouds=15,fogmode=2",{camera_barriers_x={105}}),
+  parse"offset=2880,width=128,height=16,camera_mode=7,music=2,pal=1,bg=13,clouds=7,fogmode=2",
+  parse"offset=3079,width=16,height=62,camera_mode=8,music=2,pal=3,bg=15,clouds=7,fogmode=2,right_edge=yes,title=destination",
+}
+palettes={
+  {[2]=12,[5]=2},
+  {[2]=14,[5]=2},
+  {[2]=1,[7]=11},
 }
 
 function camera_x_barrier(tile_x,px,py)
@@ -446,8 +388,8 @@ function goto_level(index)
     level_intro=60
   end
 
-  if level_index==2 then 
-    psfx(17,8,16)
+  if level_index==2 then
+    psfx"17,8,16"
   end
 
   -- load into ram
@@ -460,7 +402,7 @@ function goto_level(index)
     current_music=level.music
     music(level.music)
   end
-  
+
   -- load level contents
   restart_level()
 end
@@ -471,12 +413,14 @@ function next_level()
 end
 
 function restart_level()
-  camera_x,camera_y,camera_target_x,camera_target_y,
   objects,
-  infade,have_grapple,sfx_timer=
-  0,0,0,0,
+  have_grapple,
+  camera_x,camera_y,camera_target_x,camera_target_y,
+  infade,sfx_timer=
   {},
-  0,level_index>2,0
+  level_index>2,
+  splat"0,0,0,0,\
+  0,0"
 
   for i=0,level.width-1 do
     for j=0,level.height-1 do
@@ -493,7 +437,7 @@ function tile_at(x,y)
   return x<0 or y<0 or x>=level.width or y>=level.height and 0 or peek(0x4300+x+y*level.width)
 end
 
-input_x,input_jump_pressed,input_grapple_pressed,axis_x_value=0,0,0,0
+input_x,input_jump_pressed,input_grapple_pressed,axis_x_value=splat"0,0,0,0"
 
 function update_input()
     -- axes
@@ -535,22 +479,9 @@ end
 objects,types,lookup={},{},{}
 function lookup.__index(self, i) return self.base[i] end
 
-object = {
- speed_x=0,
- speed_y=0,
- remainder_x=0,
- remainder_y=0,
- hit_x=0,
- hit_y=0,
- hit_w=8,
- hit_h=8,
- grapple_mode=0,
- hazard=0,
- facing=1,
- freeze=0
-}
+object = parse"speed_x=0,speed_y=0,remainder_x=0,remainder_y=0,hit_x=0,hit_y=0,hit_w=8,hit_h=8,grapple_mode=0,hazard=0,facing=1,freeze=0"
 
-function object.move_x(self,x,on_collide) 
+function object.move_x(self,x,on_collide)
   self.remainder_x+=x
   local mx=flr(self.remainder_x+0.5)
   self.remainder_x-=mx
@@ -574,7 +505,7 @@ function object.move_y(self,y,on_collide)
   self.remainder_y+=y
   local my=flr(self.remainder_y+0.5)
   self.remainder_y-=my
-  
+
   local total,mys=my,sgn(my)
   local mys=sgn(my)
   while my~=0
@@ -756,7 +687,7 @@ function snowball.update(self)
   end
 end
 function snowball.on_collide_x(self,moved,total)
-  if self:corner_correct(sgn(self.speed_x),0,2,2,1) then
+  if self:corner_correct(sgn(self.speed_x),splat"0,2,2,1") then
     return
   end
   if self:hurt() then
@@ -764,16 +695,16 @@ function snowball.on_collide_x(self,moved,total)
   end
   self.speed_x*=-1
   self.remainder_x,self.freeze=0,1
-  psfx(17,0,2)
+  psfx"17,0,2"
   return true
 end
 function snowball.on_collide_y(self)--,moved,total)
   if self.speed_y>=4 then
     self.speed_y=-2
-    psfx(17,0,2)
+    psfx"17,0,2"
   elseif self.speed_y>=1 then
     self.speed_y=-1
-    psfx(17,0,2)
+    psfx"17,0,2"
   else
     self.speed_y=0
   end
@@ -789,7 +720,7 @@ end
 function snowball.hurt(self)
   self.hp-=1
   if self.hp<=0 then
-    psfx(8,16,4)
+    psfx"8,16,4"
     self.destroyed=true
     return true
   end
@@ -818,7 +749,7 @@ springboard.grapple_mode,springboard.holdable,springboard.thrown_timer=3,true,0
 function springboard.update(self)
   if not self.held then
     self.thrown_timer-=1
-    --friction and gravity  
+    --friction and gravity
     if self:check_solid(0,1) then
       self.speed_x=approach(self.speed_x,0,1)
     else
@@ -860,7 +791,7 @@ function springboard.on_release(self,thrown)
 end
 
 grappler=new_type(46)
-grappler.grapple_mode,grappler.hit_x,grappler.hit_y,grappler.hit_w,grappler.hit_h=2,-1,-1,10,10
+grappler.grapple_mode,grappler.hit_x,grappler.hit_y,grappler.hit_w,grappler.hit_h=splat"2,-1,-1,10,10"
 
 bridge=new_type(63)
 function bridge.update(self)
@@ -881,7 +812,7 @@ function berry.update(self)
     if self.player:check_solid(0,1) and self.player.state~=99 then self.ground+=1 else self.ground=0 end
 
     if self.ground>3 or self.player.x>level.width*8-7 or self.player.last_berry~=self then
-      psfx(8,8,8,20)
+      psfx"8,8,8,20"
       collected[self.id]=true
       berry_count+=1
       self.collected,self.timer,self.draw=true,0,score
@@ -891,7 +822,7 @@ end
 function berry.collect(self,player)
   if not self.player then
     self.player,player.last_berry,self.flash,self.ground=player,self,5,0
-    psfx(7,12,4)
+    psfx"7,12,4"
   end
 end
 function berry.draw(self)
@@ -926,7 +857,7 @@ function crumble.update(self)
       end
       if can_respawn then
         self.breaking,self.time=false,0
-        psfx(17,5,3)
+        psfx"17,5,3"
       else
         self.x,self.y=-32,-32
       end
@@ -972,7 +903,7 @@ function make_spawner(tile,dir)
       self.timer=0
       local snowball=create(snowball,self.x,self.y-8)
       snowball.speed_x,snowball.speed_y=dir*2,4
-      psfx(17,5,3)
+      psfx"17,5,3"
     end
   end
   return spawner
@@ -992,7 +923,7 @@ player.wipe_timer,
 player.t_grapple_jump_grace,
 player.t_grapple_pickup,
 player.state=
-0,0,0,0,0,0,0,0,0,0,0,0
+splat"0,0,0,0,0,0,0,0,0,0,0,0"
 
 -- grapple functions
 
@@ -1005,25 +936,22 @@ player.state=
 ]]
 
 function player.start_grapple(self)
+  self.grapple_x,self.grapple_y,self.grapple_retract,self.grapple_wave,
   self.state,
-  self.speed_x,
-  self.speed_y,
-  self.remainder_x,
-  self.remainder_y,
-  self.grapple_x,
-  self.grapple_y,
-  self.grapple_wave,
-  self.grapple_retract,
-  self.t_grapple_cooldown,
-  self.t_var_jump=
-  10,0,0,0,0,self.x,self.y-3,0,false,6,0
+  self.speed_x,self.speed_y,self.remainder_x,self.remainder_y,
+  self.t_grapple_cooldown,self.t_var_jump=
+  self.x,self.y-3,false,splat"0,\
+  10,\
+  0,0,0,0,\
+  6,0"
+
   if input_x~=0 then
     self.grapple_dir=input_x
   else
     self.grapple_dir=self.facing
   end
   self.facing=self.grapple_dir
-  psfx(8,0,5)
+  psfx"8,0,5"
 end
 
 -- 0 = nothing, 1 = hit!, 2 = fail
@@ -1046,50 +974,53 @@ end
 
 function player.jump(self)
   consume_jump_press()
+  self.auto_var_jump,
   self.state,
   self.speed_y,
   self.var_jump_speed,
   self.t_var_jump,
-  self.t_jump_grace,
-  self.auto_var_jump=
-  0,-4,-4,4,0,false
+  self.t_jump_grace=
+  false,splat"0,-4,-4,4,0"
+
   self.speed_x+=input_x*0.2
   self:move_y(self.jump_grace_y - self.y)
-  psfx(7,0,4)
+  psfx"7,0,4"
 end
 
 function player.bounce(self,x,y)
+  self.auto_var_jump,
   self.state,
   self.speed_y,
   self.var_jump_speed,
   self.t_var_jump,
-  self.t_jump_grace,
-  self.auto_var_jump=
-  0,-4,-4,4,0,true
+  self.t_jump_grace=
+  true,splat"0,-4,-4,4,0"
+
   self.speed_x+=sgn(self.x-x)*0.5
-  self:move_y(y-self.y) 
+  self:move_y(y-self.y)
 end
 
 function player.spring(self,y)
   consume_jump_press()
-  if input_jump then 
-    psfx(17,2,3)
+  if input_jump then
+    psfx"17,2,3"
   else
-    psfx(17,0,2)
+    psfx"17,0,2"
   end
+  self.auto_var_jump,
+  self.springboard.player,
   self.state,
   self.speed_y,
   self.var_jump_speed,
   self.t_var_jump,
   self.t_jump_grace,
-  self.remainder_y,
-  self.auto_var_jump,
-  self.springboard.player=
-  0,-5,-5,6,0,0,false,nil
+  self.remainder_y=
+  false,nil,splat"0,-5,-5,6,0,0"
+
   for o in all(objects) do
     if o.base == crumble and not o.destroyed and self.springboard:overlaps(o, 0, 4) then
       o.breaking = true
-      psfx(8, 20, 4)
+      psfx"8, 20, 4"
     end
   end
 end
@@ -1104,21 +1035,22 @@ function player.wall_jump(self,dir)
   self.auto_var_jump,
   self.facing=
   0,-3,-3,3*dir,4,false,dir
+
   self:move_x(-dir*3)
-  psfx(7,4,4)
+  psfx"7,4,4"
 end
 
 function player.grapple_jump(self)
   consume_jump_press()
-  psfx(17,2,3)
+  psfx"17,2,3"
+  self.auto_var_jump,
+  self.grapple_retract,
   self.state,
   self.t_grapple_jump_grace,
   self.speed_y,
   self.var_jump_speed,
-  self.t_var_jump,
-  self.auto_var_jump,
-  self.grapple_retract=
-  0,0,-3,-3,4,false,true
+  self.t_var_jump=
+  false,true,splat"0,0,-3,-3,4"
   self.speed_x=mid(-4,self.speed_x,4)--sgn(self.speed_x)*min(4,abs(self.speed_x))
   --if abs(self.speed_x)>4 then
   --  self.speed_x=sgn(self.speed_x)*4
@@ -1131,9 +1063,9 @@ function player.bounce_check(self,obj)
 end
 
 function player.die(self)
-  self.state,freeze_time,shake=99,2,5
+  self.state,freeze_time,shake=splat"99,2,5"
   death_count+=1
-  psfx(14,16,16,120)
+  psfx"14,16,16,120"
 end
 
 --[[
@@ -1169,13 +1101,13 @@ end
 -- grappled objects
 
 function pull_collide_x(self,moved,target)
-  return not self:corner_correct(sgn(target),0,4,2,0)
+  return not self:corner_correct(sgn(target),splat"0,4,2,0")
 end
 
 function player.release_holding(self,obj,x,y,thrown)
   obj.held,obj.speed_x,obj.speed_y,self.holding=false,x,y,nil
   obj:on_release(thrown)
-  psfx(7,24,6)
+  psfx"7,24,6"
 end
 
 -- events
@@ -1183,7 +1115,7 @@ end
 function player.init(self)
   self.x+=4
   self.y+=8
-  self.hit_x,self.hit_y,self.hit_w,self.hit_h=-3,-6,6,6
+  self.hit_x,self.hit_y,self.hit_w,self.hit_h=splat"-3,-6,6,6"
   -- scarf
   self.scarf={}
   for i=0,4 do
@@ -1257,7 +1189,7 @@ function player.update(self)
       else
         self.t_var_jump=0
       end
-    end   
+    end
 
     -- jumping
     if input_jump_pressed>0 then
@@ -1331,12 +1263,12 @@ function player.update(self)
           self.grapple_hit.held,grabbed=true,true
         end
         self.state,self.grapple_wave,self.grapple_boost,self.freeze=mode == 3 and 12 or 11,2,false,2
-        psfx(14,0,5)
+        psfx"14,0,5"
         break
       end
 
       if hit==0 and abs(self.grapple_x-self.x)>=64 or hit==2 then
-        psfx(hit==2 and 7 or 14,8,3)
+        psfx(hit==2 and "7,8,3" or "14,8,3")
         self.grapple_retract,self.freeze,self.state=true,2,0
         break
       end
@@ -1348,12 +1280,12 @@ function player.update(self)
     -- release
     if not grabbed and (not input_grapple or abs(self.y-self.grapple_y)>8) then
       self.state,self.grapple_retract=0,true
-      psfx(-2)
+      psfx"-2"
     end
 
   elseif self.state==11 then
     -- grapple attached state
-    
+
     -- start boost
     if not self.grapple_boost then
       self.grapple_boost,self.speed_x=true,self.grapple_dir*8
@@ -1370,7 +1302,7 @@ function player.update(self)
     -- wall pose
     if self.spr~=4 and self:check_solid(self.grapple_dir) then
       self.spr=4
-      psfx(14,8,3)
+      psfx"14,8,3"
     end
 
     -- jumps
@@ -1431,7 +1363,7 @@ function player.update(self)
     -- hold
     if self:overlaps(obj) then
       self.state=1
-      psfx(7,16,6)
+      psfx"7,16,6"
     end
 
     -- release
@@ -1457,7 +1389,7 @@ function player.update(self)
 
     if self.state==100 then
       self.x+=1
-      if self.wipe_timer==5 and level_index>1 then psfx(17,24,9) end
+      if self.wipe_timer==5 and level_index>1 then psfx"17,24,9" end
     end
 
     self.wipe_timer+=1
@@ -1488,16 +1420,16 @@ function player.update(self)
     if o.base==grapple_pickup and self:overlaps(o) then
       --grapple pickup
       o.destroyed,have_grapple,self.state=true,true,50
-      psfx(7,12,4)
+      psfx"7,12,4"
     elseif o.base==bridge and not o.falling and self:overlaps(o) then
       --falling bridge tile
       o.falling,self.freeze,shake=true,1,2
-      psfx(8,16,4)
+      psfx"8,16,4"
     elseif o.base==snowball and not o.held then
       --snowball
       if self:bounce_check(o) and o:bounce_overlaps(self) then
         self:bounce(o.x+4,o.y)
-        psfx(17,0,2)
+        psfx"17,0,2"
         o.freeze,o.speed_y=1,-1
         o:hurt()
       elseif o.speed_x~=0 and o.thrown_timer<=0 and self:overlaps(o) then
@@ -1506,14 +1438,15 @@ function player.update(self)
       end
     elseif o.base==springboard and self.state~=2 and not o.held and self:overlaps(o) and self:bounce_check(o) then
       --springboard
+      self.springboard,
+      o.player,
       self.state,
       self.speed_x,
       self.speed_y,
       self.t_jump_grace,
-      self.springboard,
-      self.remainder_y,
-      o.player=
-      2,0,0,0,o,0,self
+      self.remainder_y=
+      o,self,splat"2,0,0,0,0"
+
       self:move_y(o.y+4-self.y)
     elseif o.base==berry and self:overlaps(o) then
       --berry
@@ -1522,16 +1455,16 @@ function player.update(self)
       --crumble
       if self.state==0 and self:overlaps(o,0,1) then
         o.breaking=true
-        psfx(8,20,4)
+        psfx"8,20,4"
       elseif self.state==11 then
         if self:overlaps(o,self.grapple_dir) or self:overlaps(o,self.grapple_dir,3) or self:overlaps(o,self.grapple_dir,-2) then
           o.breaking=true
-          psfx(8,20,4)
+          psfx"8,20,4"
         end
       end
     elseif o.base==checkpoint and level_checkpoint~=o.id and self:overlaps(o) then
       level_checkpoint=o.id
-      psfx(8,24,6,20)
+      psfx"8,24,6,20"
     end
   end
 
@@ -1563,7 +1496,7 @@ function player.update(self)
   if current_music==levels[1].music and self.x>61*8 then
     current_music=37
     music(37)
-    psfx(17,24,9)
+    psfx"17,24,9"
   end
 
   -- ending music
@@ -1635,7 +1568,7 @@ function player.draw(self)
 
   -- grapple
   if self.state>=10 and self.state<=12 then
-    draw_sine_h(self.x,self.grapple_x,self.y-3,7,2*self.grapple_wave,6,0.08,6)
+    draw_sine_h(self.x,self.grapple_x,self.y-3,7,2*self.grapple_wave,splat"6,0.08,6")
   end
 
   -- retracting grapple
@@ -1659,49 +1592,52 @@ end
 
 
 -- px9 decompress
--- by zep
+-- by zep & co.
 
 -- x0,y0 where to draw to
 -- src   compressed data address
 -- vget  read function (x,y)
 -- vset  write function (x,y,v)
 
-function px9_decomp(x0,y0,src,vget,vset)
+function
+  px9_decomp(x0,y0,src,vget,vset)
+
   local function vlist_val(l, val)
-    -- find position
-    for i=1,#l do
-      if l[i]==val then
-        for j=i,2,-1 do
-          l[j]=l[j-1]
-        end
-        l[1]=val
-        return i
+    -- find position and move
+    -- to head of the list
+
+--[ 2-3x faster than block below
+    local v,i=l[1],1
+    while v!=val do
+      i+=1
+      v,l[i]=l[i],v
+    end
+    l[1]=val
+--]]
+
+--[[ 7 tokens smaller than above
+    for i,v in ipairs(l) do
+      if v==val then
+        add(l,deli(l,i),1)
+        return
       end
     end
+--]]
   end
-  -- bit cache is between 16 and 
-  -- 31 bits long with the next
-  -- bit always aligned to the
-  -- lsb of the fractional part
-  local cache,cache_bits=0,0
-  function getval(bits)
-    if cache_bits<16 then
-      -- cache next 16 bits
-      cache+=%src>>>16-cache_bits
-      cache_bits+=16
-      src+=2
-    end
-    -- clip out the bits we want
-    -- and shift to integer bits
-    local val=cache<<32-bits>>>16-bits
-    -- now shift those bits out
-    -- of the cache
-    cache=cache>>>bits
-    cache_bits-=bits
-    return val
+
+  -- read an m-bit num from src
+  local function getval(m)
+    -- $src: 4 bytes at flr(src)
+    -- >>src%1*8: sub-byte pos
+    -- <<32-m: zero high bits
+    -- >>>16-m: shift to int
+    local res=$src >> src%1*8 << 32-m >>> 16-m
+    src+=m>>3 --m/8
+    return res
   end
+
   -- get number plus n
-  function gnp(n)
+  local function gnp(n)
     local bits=0
     repeat
       bits+=1
@@ -1710,12 +1646,16 @@ function px9_decomp(x0,y0,src,vget,vset)
     until vv<(1<<bits)-1
     return n
   end
+
   -- header
-  local w,h_1,
+
+  local
+    w_1,h_1,      -- w-1,h-1
     eb,el,pr,
     splen,
-    predict=
-    gnp"1",gnp"0",
+    predict
+    =
+    gnp"0",gnp"0",
     gnp"1",{},{},
     0
     --,nil
@@ -1724,33 +1664,30 @@ function px9_decomp(x0,y0,src,vget,vset)
     add(el,getval(eb))
   end
   for y=y0,y0+h_1 do
-    for x=x0,x0+w-1 do
+    for x=x0,x0+w_1 do
       splen-=1
-      if splen<1 then
+
+      if(splen<1) then
         splen,predict=gnp"1",not predict
       end
+
       local a=y>y0 and vget(x,y-1) or 0
+
       -- create vlist if needed
-      local l=pr[a]
-      if not l then
-        l={}
-        for e in all(el) do
-          add(l,e)
-        end
-        pr[a]=l
-      end
+      local l=pr[a] or {unpack(el)}
+      pr[a]=l
+
       -- grab index from stream
       -- iff predicted, always 1
+
       local v=l[predict and 1 or gnp"2"]
+
       -- update predictions
-      vlist_val(l,v)
-      vlist_val(el,v)
+      vlist_val(l, v)
+      vlist_val(el, v)
+
       -- set
       vset(x,y,v)
-      -- advance
-      x+=1
-      y+=x\w
-      x%=w
     end
   end
 end
