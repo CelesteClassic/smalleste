@@ -1153,7 +1153,7 @@ function _draw()
  -- credits
  if is_title() then
   ?splat"z+x,58,80,5"
-  ?splat"matt thorson,42,96,5"
+  ?splat"maddy thorson,40,96,5"
   ?splat"noel berry,46,102,5"
  end
 
