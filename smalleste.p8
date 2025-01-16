@@ -840,7 +840,7 @@ foreach(split([[
 96,big_chest
 118,flag
 ]],"\n"),function(t)
- local tile,obj=unpack(split(t))
+ local tile,obj=splat(t)
  tiles[tile]=_ENV[obj]
 end)
 
@@ -897,7 +897,7 @@ function init_object(type,x,y,tile)
 
  function obj.check(type,ox,oy)
   for other in all(objects) do
-   if other and other.type==type and other~=obj and other.collideable and
+   if other.type==type and other~=obj and other.collideable and
     other.right()>=obj.left()+ox and
     other.bottom()>=obj.top()+oy and
     other.left()<=obj.right()+ox and
@@ -1153,7 +1153,7 @@ function _draw()
  -- credits
  if is_title() then
   ?splat"z+x,58,80,5"
-  ?splat"matt thorson,42,96,5"
+  ?splat"maddy thorson,40,96,5"
   ?splat"noel berry,46,102,5"
  end
 
